@@ -79,3 +79,6 @@ def build_FP_model(morgan, FP):
     # check bias
     
 
+'''
+train model to predict metabolite-likeness
+'''

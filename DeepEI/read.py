@@ -12,6 +12,7 @@ import numpy as np
 from tqdm import tqdm
 from rdkit import Chem
 from rdkit.Chem import AllChem
+from rdkit.Chem.rdMolDescriptors import CalcExactMolWt
 from pycdk.pycdk import MolFromSmiles, parser_formula, MolToFormula, getMolecularDescriptor
 from DeepEI.utils import ms2vec, fp2vec, get_cdk_fingerprints
 
@@ -71,13 +72,14 @@ def collect():
             derive = 0
         try:
             mol = Chem.MolFromSmiles(m['smiles'])
+            if CalcExactMolWt(mol) > 2000:
+                continue
             smiles = Chem.MolToSmiles(mol, kekuleSmiles=True)
             # check element
             elements = parser_formula(MolToFormula(MolFromSmiles(smiles)))
             for e in elements:
                 if e not in ['C', 'H', 'O', 'N', 'S', 'P', 'Si', 'F', 'Cl', 'Br', 'I']:
-                    print ('contain uncommon element')
-                    continue
+                    raise ValueError ('contain uncommon element')
             morgan_fp = np.array(AllChem.GetMorganFingerprintAsBitVect(mol, 2, nBits=4096))
             cdk_fp = get_cdk_fingerprints(smiles)
             cdk_fp = fp2vec(cdk_fp)
