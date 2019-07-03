@@ -84,7 +84,7 @@ def collect():
             cdk_fp = get_cdk_fingerprints(smiles)
             cdk_fp = fp2vec(cdk_fp)
             cdk_des = getMolecularDescriptor(MolFromSmiles(smiles)).values()
-            cdk_des  = list(itertools.chain(*cdk_des))
+            cdk_des  = np.array(list(itertools.chain(*cdk_des)))
             ri = list(m['RI'].values())
             peak_vec = ms2vec(m['peakindex'], m['peakintensity'])
         except:
