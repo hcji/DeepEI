@@ -6,7 +6,13 @@ Created on Sun Apr 28 13:43:18 2019
 """
 
 import numpy as np
-from pycdk.pycdk import MolFromSmiles, getFingerprint
+import rpy2.robjects as robjects
+import rpy2.robjects.numpy2ri as numpy2ri
+numpy2ri.activate()
+robjects.r('''source('DeepEI/rcdk.R')''')
+get_fingerprint = robjects.globalenv['get_fingerprint']
+get_descriptors = robjects.globalenv['get_descriptors']
+# from pycdk.pycdk import MolFromSmiles, getFingerprint
 
 def ms2vec(peakindex, peakintensity, maxmz=2000):
     output = np.zeros(maxmz)
@@ -24,17 +30,12 @@ def fp2vec(fp, nbit=6931):
     return output
 
 def get_cdk_fingerprints(smi):
-    '''
-    supported:
-    'pubchem', 'substructure', 'maccs', 'standard', 'extended', 'graph', 'hybridization', 'estate', 'klekota-roth', 'shortestpath', 'signature', 'circular'
-    '''
-    mol = MolFromSmiles(smi)
-    types=['substructure', 'pubchem', 'klekota-roth', 'maccs']
-    fingerprints = [getFingerprint(mol, t) for t in types]
-    bits = fingerprints[0]['bits'] + list(fingerprints[0]['nbit'] + np.array(fingerprints[1]['bits']))
-    bits = []
-    for i, fp in enumerate(fingerprints):
-        sumbits = sum([fingerprints[j]['nbit'] for j in range(i)])
-        this = [sumbits + j for j in fp['bits']]
-        bits += this
-    return bits
+    types=['standard', 'pubchem', 'kr', 'maccs']
+    fps = []
+    for tp in types:
+        fps += list(get_fingerprint(smi, tp))
+    return fps
+
+def get_cdk_descriptors(smi):
+    dsp = list(get_descriptors(smi))
+    return dsp

@@ -159,7 +159,7 @@ def build_RI_model_CNN(smiles, RI, method, save_name):
     return {'r2': r2, 'mae': mae, 'model': model}        
     
 
-def build_RI_model_RNN(smiles, RI, method, save_name):
+def build_RI_model_RNN(smiles, RI, save_name):
     words = get_dict(smiles, save_path='Model/RI/' + save_name + '_dict.json')
     keep = np.where(~ np.isnan(RI))[0]
     X = []

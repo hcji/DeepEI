@@ -14,7 +14,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdMolDescriptors import CalcExactMolWt
 from pycdk.pycdk import MolFromSmiles, parser_formula, MolToFormula, getMolecularDescriptor
-from DeepEI.utils import ms2vec, fp2vec, get_cdk_fingerprints
+from DeepEI.utils import ms2vec, fp2vec, get_cdk_fingerprints, get_cdk_descriptors
 
 spec_path ='NIST2017/NIST_Spec.db'
 mol_path ='NIST2017/NIST_Mol.db'
@@ -83,8 +83,9 @@ def collect():
             morgan_fp = np.array(AllChem.GetMorganFingerprintAsBitVect(mol, 2, nBits=4096))
             cdk_fp = get_cdk_fingerprints(smiles)
             cdk_fp = fp2vec(cdk_fp)
-            cdk_des = getMolecularDescriptor(MolFromSmiles(smiles)).values()
-            cdk_des  = np.array(list(itertools.chain(*cdk_des)))
+            cdk_des = get_cdk_descriptors(smiles)
+            # cdk_des = getMolecularDescriptor(MolFromSmiles(smiles)).values()
+            # cdk_des  = np.array(list(itertools.chain(*cdk_des)))
             ri = list(m['RI'].values())
             peak_vec = ms2vec(m['peakindex'], m['peakintensity'])
         except:
