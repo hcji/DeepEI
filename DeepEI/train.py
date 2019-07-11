@@ -21,6 +21,7 @@ from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, mean_absolute_error, r2_score
 from tqdm import tqdm
 from sklearn.cross_decomposition import PLSRegression
+from sklearn.ensemble import RandomForestClassifier
 from smiles_to_onehot.encoding import get_dict, one_hot_coding
 
 
@@ -192,7 +193,7 @@ def build_RI_model_RNN(smiles, RI, save_name):
     model.add(Dense(1, activation='linear'))    
     opt = optimizers.Adam(lr=0.001)
     model.compile(optimizer=opt, loss='mse', metrics=[metrics.mae])
-    history = model.fit(X_train, Y_train, epochs=20, validation_split=0.11)    
+    history = model.fit(X_train, Y_train, epochs=10, validation_split=0.11)    
 
     # plot loss
     plt.plot(history.history['loss'])
@@ -229,11 +230,8 @@ def build_FP_model_DNN(spec, cdk_fp, i):
     if (frac < 0.1) or (frac > 0.9):
         return None
     
-    # encoder 
-    encoder = LabelEncoder()
-    encoder.fit([1, 0])
-    encoded_Y = encoder.transform(Y)
-    class_Y = keras.utils.to_categorical(encoded_Y, 2)
+    # label to class
+    class_Y = np.array([Y, (1-Y)]).transpose()
     
     # split data
     X_train, X_test, Y_train, Y_test = train_test_split(X, class_Y, test_size=0.1)
@@ -285,7 +283,7 @@ def build_FP_models(spec, cdk_fp, method='DNN'):
         output = pd.read_csv('fingerprint_model.csv', index_col = 0)
     except:
         output = pd.DataFrame(columns=['ind', 'frac', 'accuracy', 'precision', 'recall', 'f1'])
-    functions = {'DNN': build_FP_model_DNN, 'PLSDA': build_FP_model_PLSDA}
+    functions = {'DNN': build_FP_model_DNN, 'PLSDA': build_FP_model_PLSDA, 'RF': build_FP_model_RF}
     
     for i in tqdm(range(cdk_fp.shape[1])):
         if str(i) in existed:
@@ -309,10 +307,7 @@ def build_FP_model_PLSDA(spec, cdk_fp, i, ncomps=range(2,10)):
         return None
     
     # encoder 
-    encoder = LabelEncoder()
-    encoder.fit([1, 0])
-    encoded_Y = encoder.transform(Y)
-    class_Y = keras.utils.to_categorical(encoded_Y, 2)
+    class_Y = np.array([Y, (1-Y)]).transpose()
     
     # split data
     X_train, X_test, Y_train, Y_test = train_test_split(X, class_Y, test_size=0.1)
@@ -341,4 +336,42 @@ def build_FP_model_PLSDA(spec, cdk_fp, i, ncomps=range(2,10)):
     accuracy = accuracy_score(Y_test, Y_pred)    
     return {'frac': frac, 'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1, 'model': model}
     
-   
+ 
+def build_FP_model_RF(spec, cdk_fp, i):
+    X = spec
+    Y = cdk_fp[:,i]
+    # check bias
+    frac = np.sum(Y) / len(Y)
+    if (frac < 0.1) or (frac > 0.9):
+        return None
+    
+    # encoder 
+    class_Y = np.array([Y, (1-Y)]).transpose()
+    
+    # split data
+    X_train, X_test, Y_train, Y_test = train_test_split(X, class_Y, test_size=0.1)
+    X_train, X_valid, Y_train, Y_valid = train_test_split(X_train, Y_train, test_size=0.11)
+        
+    # train and select best model
+    model = None
+    best_acc = -1
+    Y_valid = np.round(Y_valid[:,0])
+    for max_depth in range(3, 11):
+        rf = RandomForestClassifier(max_depth=max_depth, n_estimators=100).fit(X=X_train,y=Y_train)
+        Y_valhat = rf.predict(X_valid)
+        Y_valhat = np.array([int(pos > neg) for (pos, neg) in Y_valhat])
+        Y_val_acc = accuracy_score(Y_valid, Y_valhat)
+        if Y_val_acc > best_acc:
+            best_acc = Y_val_acc
+            model = rf
+    
+    # test model
+    Y_pred = model.predict(X_test)
+    Y_pred = np.array([int(pos > neg) for (pos, neg) in Y_pred])
+    Y_test = np.round(Y_test[:,0])
+    f1 = f1_score(Y_test, Y_pred)
+    precision = precision_score(Y_test, Y_pred)
+    recall = recall_score(Y_test, Y_pred)
+    accuracy = accuracy_score(Y_test, Y_pred)    
+    return {'frac': frac, 'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1, 'model': model}
+     
