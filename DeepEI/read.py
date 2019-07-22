@@ -44,7 +44,7 @@ def read_mol(i):
         for r in retention:
             if 'SemiStdNP' in r:
                 RI['SemiStdNP'] = float(r.split('=')[1].split('/')[0])
-            if 'StdNP' in r:
+            if ('StdNP' in r) and ('Semi' not in r):
                 RI['StdNP'] = float(r.split('=')[1].split('/')[0])
             if 'StdPolar' in r:
                 RI['StdPolar'] = float(r.split('=')[1].split('/')[0])
