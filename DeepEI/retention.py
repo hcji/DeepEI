@@ -56,7 +56,7 @@ def build_RI_model_descriptor(morgan, cdkdes, RI, descriptor, save_name):
     opt = optimizers.Adam(lr=0.001)
     model.compile(optimizer=opt, loss='mse', metrics=[metrics.mae])
     history = model.fit(X_train, Y_train, epochs=20, batch_size=1024, validation_split=0.11)
-    
+    '''
     # plot loss
     plt.plot(history.history['loss'])
     plt.plot(history.history['mean_absolute_error'])
@@ -65,8 +65,9 @@ def build_RI_model_descriptor(morgan, cdkdes, RI, descriptor, save_name):
     plt.ylabel('values')
     plt.xlabel('epoch')
     plt.legend(['loss', 'mae', 'val_loss', 'val_mae'], loc='upper left')
-    plt.show()
-    
+    # plt.show()
+    plt.savefig("Result/retention_" + save_name + '_loss.png')
+    '''
     # predict
     Y_predict = model.predict(X_test)
     r2 = round(r2_score(Y_predict, Y_test), 4)
@@ -76,8 +77,11 @@ def build_RI_model_descriptor(morgan, cdkdes, RI, descriptor, save_name):
     plt.plot([0,4500], [0,4500], color ='red')
     plt.ylabel('Predicted RI')
     plt.xlabel('Experimental RI')        
-    plt.text(0, 4000, 'R2='+str(r2), fontsize=15)
-    plt.show()
+    plt.text(0, 4000, 'R2='+str(r2), fontsize=12)
+    plt.text(0, 3600, 'MAE='+str(mae), fontsize=12)
+    # plt.show()
+    plt.savefig("Result/retention_" + save_name + '_r2.png')
+    plt.close('all')
     
     # save model
     model.save('Model/RI/' + save_name + '_model.h5')
@@ -102,7 +106,7 @@ def build_RI_model_CNN(smiles, RI, method, save_name):
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1)
     layer_in = Input(shape=(X.shape[1:3]), name="smile")
     layer_conv = layer_in
-    if method == 'singe_channel':
+    if method == 'single_channel':
         for i in range(5):
             layer_conv = Conv1D(128, kernel_size=4, activation='relu', kernel_initializer='normal')(layer_conv)
             layer_conv = MaxPooling1D(pool_size=2)(layer_conv)
@@ -132,7 +136,7 @@ def build_RI_model_CNN(smiles, RI, method, save_name):
     opt = optimizers.Adam(lr=0.001)
     model.compile(optimizer=opt, loss='mse', metrics=[metrics.mae])
     history = model.fit(X_train, Y_train, epochs=20, validation_split=0.11)
-
+    '''
     # plot loss
     plt.plot(history.history['loss'])
     plt.plot(history.history['mean_absolute_error'])
@@ -141,8 +145,9 @@ def build_RI_model_CNN(smiles, RI, method, save_name):
     plt.ylabel('values')
     plt.xlabel('epoch')
     plt.legend(['loss', 'mae', 'val_loss', 'val_mae'], loc='upper left')
-    plt.show()
-    
+    # plt.show()
+    plt.savefig("Result/retention_" + save_name + '_loss.png')
+    '''
     # predict
     Y_predict = model.predict(X_test)
     r2 = round(r2_score(Y_predict, Y_test), 4)
@@ -152,8 +157,11 @@ def build_RI_model_CNN(smiles, RI, method, save_name):
     plt.plot([0,4500], [0,4500], color ='red')
     plt.ylabel('Predicted RI')
     plt.xlabel('Experimental RI')        
-    plt.text(0, 4000, 'R2='+str(r2), fontsize=15)
-    plt.show()
+    plt.text(0, 4000, 'R2='+str(r2), fontsize=12)
+    plt.text(0, 3600, 'MAE='+str(mae), fontsize=12)
+    # plt.show()
+    plt.savefig("Result/retention_" + save_name + '_r2.png')
+    plt.close('all')
     
     # save model
     model.save('Model/RI/' + save_name + '_model.h5')

@@ -13,7 +13,10 @@ from DeepEI.retention import build_RI_model_descriptor, build_RI_model_CNN, buil
 
 smiles = json.load(open('Data/All_smiles.json'))
 '''
-isolate = list(np.random.choice(range(len(smiles)), 1000))
+rindex = np.load('Data/RI_data.npy')
+haveri = np.where(~np.isnan(rindex[:,0]))[0]
+
+isolate = list(np.random.choice(haveri, 500))
 keep = [i for i in range(len(smiles)) if i not in isolate]
 isolate = [int(i) for i in isolate]
 keep = [int(i) for i in keep]
@@ -51,8 +54,13 @@ n_SimiStdNP = len(np.where(~ np.isnan(rindex[:,0]))[0])
 n_StdNP = len(np.where(~ np.isnan(rindex[:,1]))[0])
 n_StdPolar = len(np.where(~ np.isnan(rindex[:,2]))[0])
 
-SimiStdNP_model_dnn = build_RI_model_descriptor(morgan, cdkdes, rindex[:,0], 'morgan', 'SimiStdNP_DNN')
-StdPolar_model_dnn = build_RI_model_descriptor(morgan, cdkdes, rindex[:,2], 'morgan', 'StdPolar_DNN')
-
-SimiStdNP_model_cnn = build_RI_model_CNN(smiles, rindex[:,0], 'multi_channel', 'SimiStdNP_CNN')
-StdPolar_model_cnn = build_RI_model_CNN(smiles, rindex[:,2], 'multi_channel', 'StdPolar_CNN')
+SimiStdNP_model_dnn_morgan = build_RI_model_descriptor(morgan, cdkdes, rindex[:,0], 'morgan', 'SimiStdNP_DNN_morgan')
+StdPolar_model_dnn_morgan = build_RI_model_descriptor(morgan, cdkdes, rindex[:,2], 'morgan', 'StdPolar_DNN_morgan')
+SimiStdNP_model_dnn_desc = build_RI_model_descriptor(morgan, cdkdes, rindex[:,0], 'descriptor', 'SimiStdNP_DNN_descriptor')
+StdPolar_model_dnn_desc = build_RI_model_descriptor(morgan, cdkdes, rindex[:,2], 'descriptor', 'StdPolar_DNN_descriptor')
+SimiStdNP_model_dnn_all = build_RI_model_descriptor(morgan, cdkdes, rindex[:,0], 'all', 'SimiStdNP_DNN_all')
+StdPolar_model_dnn_all = build_RI_model_descriptor(morgan, cdkdes, rindex[:,2], 'all', 'StdPolar_DNN_all')
+SimiStdNP_model_cnn_sin = build_RI_model_CNN(smiles, rindex[:,0], 'single_channel', 'SimiStdNP_CNN_single')
+StdPolar_model_cnn_sin = build_RI_model_CNN(smiles, rindex[:,2], 'single_channel', 'StdPolar_CNN_single')
+SimiStdNP_model_cnn_mul = build_RI_model_CNN(smiles, rindex[:,0], 'multi_channel', 'SimiStdNP_CNN_multi')
+StdPolar_model_cnn_mul = build_RI_model_CNN(smiles, rindex[:,2], 'multi_channel', 'StdPolar_CNN_multi')

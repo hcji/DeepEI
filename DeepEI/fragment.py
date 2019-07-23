@@ -44,17 +44,13 @@ def pearson(y_pred, y_true):
 
 
 def loss(y_pred, y_true):
-    return -K.log(pearson(y_pred, y_true))
+    return -pearson(y_pred, y_true)
 
 
-def refine_spec(smi, vs):
-    mass = round(CalcExactMolWt(Chem.MolFromSmiles(smi)))
+def refine_spec(vs):
     vs /= max(vs)
-    pk = np.where(vs > 0)[0]
-    pk = pk[pk <= mass]
-    vspec = np.repeat(0.0, len(vs))
-    vspec[pk] = vs[pk]
-    return vspec
+    vs[vs < 0.01] = 0    
+    return vs
     
 
 def build_cnn_model(smiles, spec, method, save_name='cnn_model'):
@@ -87,7 +83,7 @@ def build_cnn_model(smiles, spec, method, save_name='cnn_model'):
         mol = Chem.MolFromSmiles(smi)
         if mol is None:
             continue
-        y_pred = refine_spec(smi, Y_pred[i])
+        y_pred = refine_spec(Y_pred[i])
         r2 = pearsonr(Y_test[i], y_pred)[0]
         R2.append(r2)
         
@@ -135,14 +131,13 @@ def create_model(X, Y, method):
     return model
 
 
-def build_dnn_model(spec, smiles, morgan, save_name='dnn_model'):
+def build_dnn_model(morgan, spec, save_name='dnn_model'):
     X = morgan
     Y = spec
     
     test = np.random.choice(range(len(X)), int(0.1*len(X)))
     train = np.array([i for i in range(len(X)) if i not in test])
     
-    smi_test = smiles[test]
     X_train = X[train,:]; X_test = X[test,:]
     Y_train = Y[train,:]; Y_test = Y[test,:]   
     
@@ -159,11 +154,8 @@ def build_dnn_model(spec, smiles, morgan, save_name='dnn_model'):
     
     Y_pred = model.predict(X_test)
     R2 = []
-    for i, smi in enumerate(smi_test):
-        mol = Chem.MolFromSmiles(smi)
-        if mol is None:
-            continue
-        y_pred = refine_spec(smi, Y_pred[i])
+    for i in range(len(Y_pred)):
+        y_pred = refine_spec(Y_pred[i])
         r2 = pearsonr(Y_test[i], y_pred)[0]
         R2.append(r2)
         
@@ -182,16 +174,19 @@ def vec2spec(vspec):
     return pd.DataFrame({'mz': mz, 'intensity': intensity})
 
 
-def pred_spec(smi, method, model, words):
+def pred_spec(smi, method, model, words, asvec=False):
     if method == 'dnn':
         mol = Chem.MolFromSmiles(smi)
-        inp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, nBits=4096)
+        inp = np.array(AllChem.GetMorganFingerprintAsBitVect(mol, 2, nBits=4096))
     else:
         inp = one_hot_coding(smi, words, max_len=1000)
-    vspec = model.predict(inp)
-    vspec = refine_spec(smi, vspec)
-    spec = vec2spec(vspec)
-    return spec
+    vspec = model.predict(np.array([inp]))[0]
+    vspec = refine_spec(vspec)
+    if asvec:
+        return vspec
+    else:
+        spec = vec2spec(vspec)
+        return spec
     
 
 def plot_ms(spectrum):
