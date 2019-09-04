@@ -62,7 +62,7 @@ def build_cnn_model(smiles, spec, method, save_name='cnn_model'):
     X = []
     Y = []
     for i, smi in enumerate(tqdm(smiles)):
-        xi = one_hot_coding(smi, words, max_len=1000)
+        xi = one_hot_coding(smi, words, max_len=600)
         if xi is not None:
             X.append(xi.todense())
             y = spec[i]
@@ -90,7 +90,7 @@ def build_cnn_model(smiles, spec, method, save_name='cnn_model'):
     model_js = model.to_json()
     with open('Model/Fragment/' + save_name + '.json', "w") as json_file:  
         json_file.write(model_js)
-    model.save_weights('Model/Fragment/' + save_name + '_forward.h5')
+    model.save_weights('Model/Fragment/' + save_name + '.h5')
     R2_mean = str(np.mean(R2)) + '±' + str(np.std(R2))
     return {'R2_mean': R2_mean, 'model': model}
 
@@ -127,7 +127,7 @@ def create_model(X, Y, method):
     model = Model(layer_in, outputs = layer_output) 
     opt = optimizers.Adam(lr=0.001)
     model.compile(optimizer=opt, loss=loss, metrics=[pearson])
-    history = model.fit(X, Y, epochs=10, validation_split=0.11)
+    history = model.fit(X, Y, epochs=10)
     return model
 
 
@@ -150,7 +150,7 @@ def build_dnn_model(morgan, spec, save_name='dnn_model'):
     model = Model(layer_in, outputs = layer_output) 
     opt = optimizers.Adam(lr=0.001)
     model.compile(optimizer=opt, loss=loss, metrics=[pearson])
-    history = model.fit(X_train, Y_train, epochs=10, validation_split=0.11)
+    history = model.fit(X_train, Y_train, epochs=10)
     
     Y_pred = model.predict(X_test)
     R2 = []
@@ -162,7 +162,7 @@ def build_dnn_model(morgan, spec, save_name='dnn_model'):
     model_js = model.to_json()
     with open('Model/Fragment/' + save_name + '.json', "w") as json_file:  
         json_file.write(model_js)
-    model.save_weights('Model/Fragment/' + save_name + '_forward.h5')
+    model.save_weights('Model/Fragment/' + save_name + '.h5')
     R2_mean = str(np.mean(R2)) + '±' + str(np.std(R2))
     return {'R2_mean': R2_mean, 'model': model}
 

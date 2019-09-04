@@ -29,6 +29,6 @@ train models to predict fingerprint
 '''
 spec = np.load('Data/Peak_data.npy')[keep,:]
 cdk_fp = np.load('Data/CDK_fp.npy')[keep,:]
-output = build_FP_models(spec, cdk_fp, method='DNN')
+output = build_FP_models(spec, cdk_fp, method='PLSDA', check=False)
 output.to_csv('fingerprint_model_dnn.csv')
 

@@ -96,7 +96,7 @@ def build_RI_model_CNN(smiles, RI, method, save_name):
     for i, smi in enumerate(smiles):
         if i not in keep:
             continue
-        xi = one_hot_coding(smi, words, max_len=1000)
+        xi = one_hot_coding(smi, words, max_len=600)
         if xi is not None:
             X.append(xi.todense())
             Y.append(RI[i])

@@ -18,14 +18,15 @@ morgan = np.load('Data/Morgan_fp.npy')[keep,:]
 spec = np.load('Data/Peak_data.npy')[keep,:]
 
 
-res_dnn = build_dnn_model(morgan, spec, save_name='dnn_model')
+# res_dnn = build_dnn_model(morgan, spec, save_name='dnn_model')
 res_sin = build_cnn_model(smiles, spec, method='single_channel', save_name='cnn_model_single_channel')
 res_mul = build_cnn_model(smiles, spec, method='multi_channel', save_name='cnn_model_multi_channel')
 
-print ('The mean of R2 of dnn model is {}'.format(res_dnn['R2_mean']))
+# print ('The mean of R2 of dnn model is {}'.format(res_dnn['R2_mean']))
 print ('The mean of R2 of single-channel model is {}'.format(res_sin['R2_mean']))
 print ('The mean of R2 of multi-channel model is {}'.format(res_mul['R2_mean']))
 
+'''
 # generate simulated spectra
 smiles = np.array(json.load(open('Data/All_smiles.json')))
 morgan = np.load('Data/Morgan_fp.npy')
@@ -37,3 +38,4 @@ model.load_weights('Model/Fragment/dnn_model_forward.h5')
 simu_spec = model.predict(morgan)
 simu_spec_refi = np.array([refine_spec(s) for s in simu_spec])
 np.save('Data/Simu_Spec.npy', np.array(simu_spec_refi))
+'''
