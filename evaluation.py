@@ -5,16 +5,19 @@ Created on Wed Sep  4 14:53:52 2019
 @author: hcji
 """
 
-
+import os
 import json
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from scipy.stats import pearsonr
+from scipy.spatial.distance import jaccard
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit import DataStructs
 from DeepEI.searchsim import get_simcomps
 from DeepEI.predict import predict_fingerprint, predict_RI, predict_MS
+from DeepEI.utils import get_cdk_fingerprints
 
 
 with open('Data/split.json', 'r') as js:
@@ -23,13 +26,15 @@ with open('Data/split.json', 'r') as js:
     test = np.array(j['isolate'])
     
 smiles = np.array(json.load(open('Data/All_smiles.json')))[keep]
-morgan = np.load('Data/Morgan_fp.npy')[keep,:]
 spec = np.load('Data/Peak_data.npy')[keep,:]
 
 test_smiles = np.array(json.load(open('Data/All_smiles.json')))[test]
-test_morgan = np.load('Data/Morgan_fp.npy')[test,:]
-test_spec = np.load('Data/Peak_data.npy')[test,:]
 test_ri = np.load('Data/RI_data.npy')[test,:]
+test_spec = np.load('Data/Peak_data.npy')[test,:]
+
+files = os.listdir('Model/Fingerprint')
+rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
+rfp = np.sort(rfp)
 
 
 def calc_molsim(smi1, smi2):
@@ -49,17 +54,17 @@ def get_spec_score(s, spec):
 
 
 def get_ri_score(ri, ris):
+    if np.isnan(ri):
+        return 0
     dif = np.abs((ris - ri) / 1000)
     score = np.exp(-dif)
     return score
     
-    
+
 def get_fp_score(fp, fps):
     score = []
     for f in fps:
-        a = len(set.intersection(*[set(f), set(fp)]))
-        b = len(set.union(*[set(f), set(fp)]))
-        score.append(a/float(b))
+        score.append(1-jaccard(f, fp))
     return np.array(score)
 
 
@@ -81,10 +86,12 @@ def get_candidates(smi, thres=0.8, db='NIST'):
         candidates = refine
     return candidates
 
-
-for i, smi in enumerate(test_smiles):
+ranks = []
+all_pred_cdkfp = predict_fingerprint(test_spec)
+for i, smi in enumerate(tqdm(test_smiles)):
     s = test_spec[i]
-    r = test_ri[i,0]
+    r = test_ri[i, 0]
+    pred_cdkfp = all_pred_cdkfp[i,:]
     compare_scores = get_spec_score(s, spec)
     ref_smi = smiles[np.argmax(compare_scores)]
     ref_spec_score = max(compare_scores)
@@ -93,5 +100,13 @@ for i, smi in enumerate(test_smiles):
     can_morgan = np.array(can_morgan)
     can_pri = predict_RI(candidates)
     can_spec = predict_MS(can_morgan)
-    
-    
+    can_cdkfp = np.array([np.array(get_cdk_fingerprints(s))[rfp] for s in candidates])
+    fp_score = get_fp_score(pred_cdkfp, can_cdkfp)
+    ri_score = get_ri_score(r, can_pri)[:,0]
+    sp_score = get_spec_score(s, can_spec)
+    tot_score = fp_score + ri_score + sp_score
+    wh_true = list(candidates).index(smi)
+    rank = len(np.where(tot_score > tot_score[wh_true])[0]) + 1
+    ranks.append(rank)
+output = pd.DataFrame({'smiles':test_smiles, 'rank':ranks})
+output.to_csv('rank_NIST.csv')
