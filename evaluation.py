@@ -86,27 +86,45 @@ def get_candidates(smi, thres=0.8, db='NIST'):
         candidates = refine
     return candidates
 
+
 ranks = []
+sim_scores = []
+ref_scores = []
 all_pred_cdkfp = predict_fingerprint(test_spec)
 for i, smi in enumerate(tqdm(test_smiles)):
+    if Chem.MolFromSmiles(smi) is None:
+        continue
     s = test_spec[i]
     r = test_ri[i, 0]
     pred_cdkfp = all_pred_cdkfp[i,:]
     compare_scores = get_spec_score(s, spec)
-    ref_smi = smiles[np.argmax(compare_scores)]
-    ref_spec_score = max(compare_scores)
-    candidates = get_candidates(smi, thres=ref_spec_score - 0.2, db='NIST')
+    # in case of ref_smi cannot be parsered or no candidates.
+    top5 = np.argsort(-compare_scores)[range(5)]
+    for i in range(5):
+        idx = top5[i]
+        ref_smi = smiles[idx]
+        ref_spec_score = compare_scores[idx]
+        candidates = get_candidates(ref_smi, thres=ref_spec_score - 0.2, db='NIST')
+        if len(candidates) > 0:
+            # if there is a candidate, break
+            break
     can_morgan = [np.array(AllChem.GetMorganFingerprintAsBitVect(Chem.MolFromSmiles(s), 2, nBits=4096)) for s in candidates]
     can_morgan = np.array(can_morgan)
     can_pri = predict_RI(candidates)
     can_spec = predict_MS(can_morgan)
     can_cdkfp = np.array([np.array(get_cdk_fingerprints(s))[rfp] for s in candidates])
+    fp_simi = calc_molsim(smi, ref_smi)
     fp_score = get_fp_score(pred_cdkfp, can_cdkfp)
     ri_score = get_ri_score(r, can_pri)[:,0]
     sp_score = get_spec_score(s, can_spec)
     tot_score = fp_score + ri_score + sp_score
-    wh_true = list(candidates).index(smi)
-    rank = len(np.where(tot_score > tot_score[wh_true])[0]) + 1
+    try:
+        wh_true = list(candidates).index(smi)
+        rank = len(np.where(tot_score > tot_score[wh_true])[0]) + 1
+    except:
+        rank = 9999
     ranks.append(rank)
+    sim_scores.append(fp_simi)
+    ref_scores.append(ref_spec_score)
 output = pd.DataFrame({'smiles':test_smiles, 'rank':ranks})
 output.to_csv('rank_NIST.csv')
