@@ -12,26 +12,11 @@ from DeepEI.read import collect
 from DeepEI.retention import build_RI_model_descriptor, build_RI_model_CNN, build_RI_model_RNN
 
 smiles = json.load(open('Data/All_smiles.json'))
-'''
-rindex = np.load('Data/RI_data.npy')
-haveri = np.where(~np.isnan(rindex[:,0]))[0]
-
-isolate = list(np.random.choice(haveri, 500))
-keep = [i for i in range(len(smiles)) if i not in isolate]
-isolate = [int(i) for i in isolate]
-keep = [int(i) for i in keep]
-split = {'isolate': isolate, 'keep': keep}
-with open('Data/split.json', 'w') as js:
-    json.dump(split, js)
-'''
 
 with open('Data/split.json', 'r') as js:
     keep = np.array(json.load(js)['keep'])
 
 
-'''
-train a model to predict retention index
-'''
 smiles = np.array(json.load(open('Data/All_smiles.json')))[keep]
 rindex = np.load('Data/RI_data.npy')[keep,:]
 

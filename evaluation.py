@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from scipy.stats import pearsonr
-from scipy.spatial.distance import jaccard
+from scipy.spatial.distance import jaccard, dice
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit import DataStructs
@@ -25,17 +25,22 @@ with open('Data/split.json', 'r') as js:
     keep = np.array(j['keep'])
     test = np.array(j['isolate'])
     
-smiles = np.array(json.load(open('Data/All_smiles.json')))[keep]
-spec = np.load('Data/Peak_data.npy')[keep,:]
+smiles = np.array(json.load(open('Data/All_smiles.json')))
+spec = np.load('Data/Peak_data.npy')
+morgan = np.load('Data/Morgan_fp.npy')
+ri = np.load('Data/RI_data.npy')
 
-test_smiles = np.array(json.load(open('Data/All_smiles.json')))[test]
-test_ri = np.load('Data/RI_data.npy')[test,:]
-test_spec = np.load('Data/Peak_data.npy')[test,:]
+train_smiles = smiles[keep]
+train_spec = spec[keep]
+train_morgan = morgan[keep]
 
 files = os.listdir('Model/Fingerprint')
 rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
 rfp = np.sort(rfp)
 
+def dot_product(a, b):
+    return np.dot(a,b)/ np.sqrt((np.dot(a,a)* np.dot(b,b)))
+    
 
 def calc_molsim(smi1, smi2):
     getfp = lambda smi: AllChem.GetMorganFingerprint(Chem.MolFromSmiles(smi), 2, useFeatures=False)
@@ -49,7 +54,7 @@ def calc_molsim(smi1, smi2):
 def get_spec_score(s, spec):
     score = []
     for ss in spec:
-        score.append(pearsonr(ss, s)[0])
+        score.append(dot_product(ss, s))
     return np.array(score)
 
 
@@ -64,56 +69,67 @@ def get_ri_score(ri, ris):
 def get_fp_score(fp, fps):
     score = []
     for f in fps:
-        score.append(1-jaccard(f, fp))
+        score.append(1-dice(f, fp))
     return np.array(score)
 
 
-def get_candidates(smi, thres=0.8, db='NIST'):
+def get_candidates(smi, mfp, thres=0.8, db='NIST'):
     if db == 'NIST':
-        all_smiles = np.array(list(smiles) + list(test_smiles))
-        scores = np.array([calc_molsim(smi, s) for s in all_smiles])
-        candidates = all_smiles[scores > thres]
+        scores = get_fp_score(mfp, morgan)
+        candidates = smiles[scores>thres]
+        morgans = morgan[scores>thres]
     else:
         candidates = get_simcomps(smi, thres*100)['smiles']
         refine = []
+        morgans = []
         for s in candidates:
             try:
-                rf = Chem.MolToSmiles(Chem.MolFromSmiles(s))
-                if '.' not in rf:
-                    refine.append(rf)
+                rf = Chem.MolToSmiles(Chem.MolFromSmiles(s), kekuleSmiles=True)
+                morg = np.array(AllChem.GetMorganFingerprintAsBitVect(Chem.MolFromSmiles(s), 2, nBits=4096))
+                if '.' in rf:
+                    continue
+                refine.append(rf)
+                morgans.append(morg)
             except:
-                pass
+                continue
         candidates = refine
-    return candidates
+    return candidates, morgans
 
 
+out_smiles = []
 ranks = []
 sim_scores = []
 ref_scores = []
-all_pred_cdkfp = predict_fingerprint(test_spec)
-for i, smi in enumerate(tqdm(test_smiles)):
-    if Chem.MolFromSmiles(smi) is None:
-        continue
-    s = test_spec[i]
-    r = test_ri[i, 0]
-    pred_cdkfp = all_pred_cdkfp[i,:]
-    compare_scores = get_spec_score(s, spec)
-    # in case of ref_smi cannot be parsered or no candidates.
-    top5 = np.argsort(-compare_scores)[range(5)]
-    for i in range(5):
-        idx = top5[i]
-        ref_smi = smiles[idx]
+all_pred_cdkfp = predict_fingerprint(spec[test])
+
+for a, i in enumerate(tqdm(test)):
+    smi = smiles[i]
+    s = spec[i]
+    r = ri[i, 0]
+    pred_cdkfp = all_pred_cdkfp[a,:]
+    compare_scores = get_spec_score(s, train_spec)
+   
+    tops = np.argsort(-compare_scores)[range(5)]
+    all_candidates = []
+    all_morgans = []
+    for idx in tops:
+        ref_smi = train_smiles[idx]
+        ref_morgan = train_morgan[idx]
         ref_spec_score = compare_scores[idx]
-        candidates = get_candidates(ref_smi, thres=ref_spec_score - 0.2, db='NIST')
-        if len(candidates) > 0:
-            # if there is a candidate, break
-            break
-    can_morgan = [np.array(AllChem.GetMorganFingerprintAsBitVect(Chem.MolFromSmiles(s), 2, nBits=4096)) for s in candidates]
-    can_morgan = np.array(can_morgan)
+        candidates, morgans = get_candidates(ref_smi, ref_morgan, thres=ref_spec_score - 0.3, db='NIST')
+        for aa, cc in enumerate(candidates):
+            if cc not in all_candidates:
+                all_candidates.append(str(cc))
+                all_morgans.append(morgans[aa])
+    candidates = np.array(all_candidates)
+    can_morgan = np.array(all_morgans)
+    if len(candidates) == 0:
+        continue
+    # can_morgan = [np.array(AllChem.GetMorganFingerprintAsBitVect(Chem.MolFromSmiles(s), 2, nBits=4096)) for s in candidates]
     can_pri = predict_RI(candidates)
     can_spec = predict_MS(can_morgan)
     can_cdkfp = np.array([np.array(get_cdk_fingerprints(s))[rfp] for s in candidates])
-    fp_simi = calc_molsim(smi, ref_smi)
+    # fp_simi = calc_molsim(smi, ref_smi)
     fp_score = get_fp_score(pred_cdkfp, can_cdkfp)
     ri_score = get_ri_score(r, can_pri)[:,0]
     sp_score = get_spec_score(s, can_spec)
@@ -124,7 +140,9 @@ for i, smi in enumerate(tqdm(test_smiles)):
     except:
         rank = 9999
     ranks.append(rank)
-    sim_scores.append(fp_simi)
+    # sim_scores.append(fp_simi)
     ref_scores.append(ref_spec_score)
-output = pd.DataFrame({'smiles':test_smiles, 'rank':ranks})
-output.to_csv('rank_NIST.csv')
+    out_smiles.append(smi)
+    
+    output = pd.DataFrame({'smiles':out_smiles, 'rank':ranks, 'ref_scores': ref_scores})
+    output.to_csv('rank_NIST.csv')
