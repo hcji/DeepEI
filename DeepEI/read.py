@@ -108,4 +108,5 @@ def collect():
     np.save('Data/Derdive.npy', np.array(Derdive))
     with open('Data/All_smiles.json', 'w') as t:
         json.dump(all_smiles, t)
-  
+
+collect()

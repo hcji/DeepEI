@@ -16,3 +16,8 @@ get_descriptors <- function(smiles, type){
   descs <- rcdk::eval.desc(mol, dnames, verbose=FALSE)
   return(as.numeric(descs))
 }
+
+write_sdf <- function(smiles, out_file){
+  mol <- rcdk::parse.smiles(smiles)
+  rcdk::write.molecules(mol, out_file)
+}
