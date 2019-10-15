@@ -20,7 +20,8 @@ from sklearn.cross_decomposition import PLSRegression
 
 def build_FP_model_DNN(spec, cdk_fp, i):
     X = spec
-    Y = cdk_fp[:,i].flatten()
+    Y = cdk_fp[:,i].todense()
+    Y = np.squeeze(np.asarray(Y))
     # check bias
     frac = np.sum(Y) / max(Y.shape)
     if (frac < 0.1) or (frac > 0.9):
@@ -99,7 +100,8 @@ def build_FP_models(spec, cdk_fp, method='DNN', check=True):
 
 def build_FP_model_PLSDA(spec, cdk_fp, i, ncomps=range(2,10)):
     X = spec
-    Y = cdk_fp[:,i].flatten()
+    Y = cdk_fp[:,i].todense()
+    Y = np.squeeze(np.asarray(Y))
     # check bias
     frac = np.sum(Y) / max(Y.shape)
     if (frac < 0.1) or (frac > 0.9):
@@ -148,6 +150,6 @@ if __name__ == '__main__':
     cdk_fp = load_npz('Data/CDK_fp.npz')
     
     spec = spec.todense()[keep,:]
-    cdk_fp = cdk_fp.todense()[keep,:]
+    cdk_fp = cdk_fp[keep,:]
     output = build_FP_models(spec, cdk_fp, method='DNN', check=True)
-    output.to_csv('fingerprint_model.csv')
+    output.to_csv('Result/fingerprint_DNN.csv')

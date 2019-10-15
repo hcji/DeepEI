@@ -14,7 +14,7 @@ if __name__ == '__main__':
     RI = np.load('Data/RI_data.npy')
     withRI = np.where(~np.isnan(RI[:,0]))[0]
 
-    isolate = list(np.random.choice(withRI, 1000))
+    isolate = list(np.random.choice(withRI, 1000, replace=False))
     keep = [i for i in range(len(smiles)) if i not in isolate]
     isolate = [int(i) for i in isolate]
     keep = [int(i) for i in keep]

@@ -12,17 +12,22 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, jaccard_score
 from scipy.sparse import load_npz
 from DeepEI.predict import predict_RI, predict_fingerprint
 
+'''
+fp_data = pd.read_csv('Result/fingerprint_DNN.csv')
+weights = fp_data['accuracy']
+'''
 
 def get_fp_score(fp, all_fps):
     scores = np.zeros(all_fps.shape[0])
     for i in range(all_fps.shape[0]):
         fpi = all_fps[i,:]
         fpi = fpi.transpose()
-        scores[i] = accuracy_score(fp, fpi)
+        scores[i] = jaccard_score(fp, fpi)
+        # scores[i] = jaccard_score(fp, fpi, sample_weight = weights)
     return scores
 
 
@@ -67,27 +72,27 @@ if __name__ == '__main__':
         candidate_1 = np.where(np.abs(rindex - ri) < 200)[0] # ri filter with 200
         w_true = np.where(candidate_1==trueindex)[0]
         if len(w_true)==0:
-            rank_1 = 9999
+            rank_1 = 99999
         else:
             fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate_1, :])
             true_fp_score = fp_scores[w_true[0]]
             rank_1 = len(np.where(fp_scores > true_fp_score)[0]) + 1
             
         # with mass filter
-        candidate_2 = np.where(np.abs(masses - mass) < 10)[0]
+        candidate_2 = np.where(np.abs(masses - mass) < 5)[0]
         w_true = np.where(candidate_2==trueindex)[0]
         if len(w_true)==0:
-            rank_2 = 9999
+            rank_2 = 99999
         else:
             fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate_2, :])
             true_fp_score = fp_scores[w_true[0]]
             rank_2 = len(np.where(fp_scores > true_fp_score)[0]) + 1        
         
         # with ri and mass filter
-        candidate_3 = np.where(np.abs(masses - mass) < 10)[0]
+        candidate_3 = np.intersect1d(candidate_1, candidate_2)
         w_true = np.where(candidate_3==trueindex)[0]
         if len(w_true)==0:
-            rank_3 = 9999
+            rank_3 = 99999
         else:
             fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate_3, :])
             true_fp_score = fp_scores[w_true[0]]

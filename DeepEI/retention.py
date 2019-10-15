@@ -5,23 +5,19 @@ Created on Wed Jun 26 07:47:48 2019
 @author: hcji
 """
 
-import os
 import json
 import joblib
 import numpy as np
 import pandas as pd
-import tensorflow.keras as keras
 import matplotlib.pyplot as plt
-from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.layers import Dense, Input, Flatten, Conv1D, MaxPooling1D, concatenate, Embedding, LSTM
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.layers import Dense, Input, Flatten, Conv1D, MaxPooling1D, concatenate
 from tensorflow.keras import metrics, optimizers
+from keras.callbacks.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, mean_absolute_error, r2_score
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_absolute_error, r2_score
 from tqdm import tqdm
-from sklearn.cross_decomposition import PLSRegression
-from sklearn.ensemble import RandomForestClassifier
 from smiles_to_onehot.encoding import get_dict, one_hot_coding
 
 
@@ -52,10 +48,15 @@ def build_RI_model_descriptor(morgan, cdkdes, RI, descriptor, save_name):
         layer_dense = Dense(int(n_nodes), activation="relu")(layer_dense)
         n_nodes = n_nodes * 0.5
     layer_output = Dense(1, activation="linear", name="output")(layer_dense)
+    
+    earlyStopping = EarlyStopping(monitor='val_loss', patience=10, verbose=0, mode='min')
+    mcp_save = ModelCheckpoint('Model/RI/' + save_name + '_model.h5', save_best_only=True, monitor='val_loss', mode='min')
+    reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1, epsilon=1e-4, mode='min')
+    
     model = Model(layer_in, outputs = layer_output) 
     opt = optimizers.Adam(lr=0.001)
     model.compile(optimizer=opt, loss='mse', metrics=[metrics.mae])
-    history = model.fit(X_train, Y_train, epochs=20, batch_size=1024, validation_split=0.11)
+    history = model.fit(X_train, Y_train, epochs=20, callbacks=[earlyStopping, mcp_save, reduce_lr_loss], batch_size=1024, validation_split=0.11)
     '''
     # plot loss
     plt.plot(history.history['loss'])
@@ -69,6 +70,7 @@ def build_RI_model_descriptor(morgan, cdkdes, RI, descriptor, save_name):
     plt.savefig("Result/retention_" + save_name + '_loss.png')
     '''
     # predict
+    model = load_model('Model/RI/' + save_name + '_model.h5')
     Y_predict = model.predict(X_test)
     r2 = round(r2_score(Y_predict, Y_test), 4)
     mae = round(mean_absolute_error(Y_predict, Y_test), 4)
@@ -84,9 +86,7 @@ def build_RI_model_descriptor(morgan, cdkdes, RI, descriptor, save_name):
     plt.savefig("Result/retention_" + save_name + '_r2.png')
     plt.close('all')
     '''
-    # save model
-    model.save('Model/RI/' + save_name + '_model.h5')
-    return {'r2': r2, 'mae': mae, 'model': model}
+    return {'r2': r2, 'mae': mae}
 
 
 def build_RI_model_CNN(smiles, RI, method, save_name):
@@ -133,10 +133,15 @@ def build_RI_model_CNN(smiles, RI, method, save_name):
     for i in range(1):
         layer_dense = Dense(32, activation="relu", kernel_initializer='normal')(layer_dense)
     layer_output = Dense(1, activation="linear", name="output")(layer_dense)
+    
+    earlyStopping = EarlyStopping(monitor='val_loss', patience=10, verbose=0, mode='min')
+    mcp_save = ModelCheckpoint('Model/RI/' + save_name + '_model.h5', save_best_only=True, monitor='val_loss', mode='min')
+    reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1, epsilon=1e-4, mode='min')
+    
     model = Model(layer_in, outputs = layer_output) 
     opt = optimizers.Adam(lr=0.001)
     model.compile(optimizer=opt, loss='mse', metrics=[metrics.mae])
-    history = model.fit(X_train, Y_train, epochs=20, validation_split=0.11)
+    history = model.fit(X_train, Y_train, epochs=20, callbacks=[earlyStopping, mcp_save, reduce_lr_loss], validation_split=0.11)
     '''
     # plot loss
     plt.plot(history.history['loss'])
@@ -150,6 +155,7 @@ def build_RI_model_CNN(smiles, RI, method, save_name):
     plt.savefig("Result/retention_" + save_name + '_loss.png')
     '''
     # predict
+    model = load_model('Model/RI/' + save_name + '_model.h5')
     Y_predict = model.predict(X_test)
     r2 = round(r2_score(Y_predict, Y_test), 4)
     mae = round(mean_absolute_error(Y_predict, Y_test), 4)
@@ -165,33 +171,7 @@ def build_RI_model_CNN(smiles, RI, method, save_name):
     plt.savefig("Result/retention_" + save_name + '_r2.png')
     plt.close('all')
     '''
-    # save model
-    model.save('Model/RI/' + save_name + '_model.h5')
-    return {'r2': r2, 'mae': mae, 'model': model}        
-    
-
-def build_RI_model_combine(morgan, cdkdes, smiles, RI, save_name):
-    words = get_dict(smiles, save_path='Model/RI/' + save_name + '_dict.json')
-    keep = np.where(~ np.isnan(RI))[0]
-    X1 = []
-    X2 = []
-    Y = []
-    for i, smi in enumerate(tqdm(smiles)):
-        if i not in keep:
-            continue
-        xi = one_hot_coding(smi, words, max_len=1000)
-        if xi is not None:
-            xi = xi.todense()
-            xj = []
-            for k in xi:
-                if np.sum(k) > 0:
-                    xj.append(k.argmax())
-                else:
-                    break
-            x2 = np.hstack((morgan[i], cdkdes[i]))
-            X1.append(np.array(xj))
-            X2.append(x2)
-            Y.append(RI[i])
+    return {'r2': r2, 'mae': mae}        
 
             
 if __name__ == '__main__':

@@ -24,6 +24,11 @@ def ms2vec(peakindex, peakintensity, maxmz=2000):
     output = output / (max(output) + 10 ** -6)
     return output
 
+def vec2ms(vec):
+    mz = np.where(vec > 0)[0]
+    intensity = vec[mz]
+    return mz, intensity
+
 def fp2vec(fp, nbit=6931):
     output = np.zeros(nbit)
     for i in fp:
@@ -31,7 +36,7 @@ def fp2vec(fp, nbit=6931):
     return output
 
 def get_cdk_fingerprints(smi):
-    types=['standard', 'pubchem', 'kr', 'maccs']
+    types=['standard', 'pubchem', 'kr', 'maccs', 'estate', 'circular']
     fps = []
     for tp in types:
         fps += list(get_fingerprint(smi, tp))
