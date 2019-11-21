@@ -13,7 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, jaccard_score
-from scipy.sparse import load_npz
+from scipy.sparse import load_npz, csr_matrix
 from DeepEI.predict import predict_RI, predict_fingerprint
 
 '''
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     
     rindex = predict_RI(smiles, mode='SimiStdNP')[:,0] # predicted ri
     cdk_fp = load_npz('Data/CDK_fp.npz')
-    cdk_fp = cdk_fp[:, rfp].todense()
+    cdk_fp = csr_matrix(cdk_fp)[:, rfp].todense()
     
     # predict fingerprints via ms
     pred_fp = predict_fingerprint(test_spec)

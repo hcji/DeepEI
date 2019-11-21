@@ -141,7 +141,7 @@ def build_FP_model_PLSDA(spec, cdk_fp, i, ncomps=range(2,10)):
 if __name__ == '__main__':
     
     import json
-    from scipy.sparse import load_npz
+    from scipy.sparse import load_npz, csr_matrix
     
     smiles = json.load(open('Data/All_smiles.json'))
     with open('Data/split.json', 'r') as js:
@@ -150,6 +150,6 @@ if __name__ == '__main__':
     cdk_fp = load_npz('Data/CDK_fp.npz')
     
     spec = spec.todense()[keep,:]
-    cdk_fp = cdk_fp[keep,:]
+    cdk_fp = csr_matrix(cdk_fp)[keep,:]
     output = build_FP_models(spec, cdk_fp, method='DNN', check=True)
     output.to_csv('Result/fingerprint_DNN.csv')
