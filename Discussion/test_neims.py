@@ -7,11 +7,25 @@ Created on Wed Nov  6 15:29:15 2019
 
 import numpy as np
 import pandas as pd
+from rdkit import Chem
+from io import StringIO
+
 import rpy2.robjects as robjects
 import rpy2.robjects.numpy2ri as numpy2ri
 numpy2ri.activate()
 robjects.r('''source('DeepEI/rcdk.R')''')
 write_sdf = robjects.globalenv['write_sdf']
+
+def writeSDF(smi, file):
+    m = Chem.MolFromSmiles(smi)
+    sio = StringIO()
+    w = Chem.SDWriter(sio)
+    w.write(m)
+    w=None
+    string = sio.getvalue()
+    with open(file, 'w') as f:
+        f.write(string)
+    
 
 def parser_NEIMS(sdf):
     with open(sdf) as t:
@@ -56,12 +70,12 @@ if __name__ == '__main__':
     import os 
     import json
     import subprocess
+    import matplotlib.pyplot as plt
     from scipy.sparse import load_npz, csr_matrix
     from libmetgem import msp
     from tqdm import tqdm
-    from rdkit import Chem
     from rdkit.Chem.rdMolDescriptors import CalcExactMolWt
-    from DeepEI.utils import ms2vec
+    from DeepEI.utils import ms2vec, vec2ms
     
     nist_smiles = np.array(json.load(open('Data/All_smiles.json')))
     nist_masses = np.load('Data/MolWt.npy')
@@ -87,12 +101,19 @@ if __name__ == '__main__':
         smi = smiles[i] # smiles
         specr = spec[i] # true spectrum
         mass = molwt[i] # true mol weight
-        write_sdf(smi, 'Temp/mol.sdf')
+        writeSDF(smi, 'Temp/mol.sdf')
         cwd = 'E:\\project\\deep-molecular-massspec'
         cmd = 'python make_spectra_prediction.py --input_file=E:/project/DeepEI/Temp/mol.sdf --output_file=E:/project/DeepEI/Temp/mol_anno.sdf --weights_dir=model/massspec_weights'
         subprocess.call(cmd, cwd=cwd) # predict spectrum with neims
         try:
             pred_speci = parser_NEIMS('Temp/mol_anno.sdf')
+            '''
+            mz, intensity = pred_speci['mz'], pred_speci['intensity']
+            intensity /= max(intensity)
+            mza, intensitya = vec2ms(specr)
+            plt.vlines(mz, np.zeros(len(mz)), intensity, color='red')
+            plt.vlines(mza, np.zeros(len(mza)), -intensitya, color='blue')
+            '''
             pred_vec = ms2vec(pred_speci['mz'], pred_speci['intensity']) # spectrum to vector
             os.unlink('Temp/mol_anno.sdf')
         except:
