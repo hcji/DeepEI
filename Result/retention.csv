@@ -1,0 +1,11 @@
+,model,column,mae,r2
+0,DNN_morgan,SimiStdNP,180.0108,0.8234
+1,DNN_morgan,StdPolar,229.4429,0.6073
+2,DNN_descriptor,SimiStdNP,82.2595,0.958
+3,DNN_descriptor,StdPolar,278.8521,0.3547
+4,DNN_all,SimiStdNP,50.3411,0.9753
+5,DNN_all,StdPolar,138.6455,0.8455
+6,CNN_single,SimiStdNP,61.0822,0.9762
+7,CNN_single,StdPolar,128.4521,0.8506
+8,CNN_multi,SimiStdNP,57.5217,0.9753
+9,CNN_multi,StdPolar,122.1448,0.861

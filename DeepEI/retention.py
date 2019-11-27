@@ -206,7 +206,7 @@ if __name__ == '__main__':
     n_StdNP = len(np.where(~ np.isnan(rindex[:,1]))[0])
     n_StdPolar = len(np.where(~ np.isnan(rindex[:,2]))[0])
 
-    m1 = build_RI_model_descriptor(morgan, cdkdes, rindex[:,0], 'morgan', 'SimiStdNP_DNN_morgan')
+    m1 = build_RI_model_descriptor(morgan, cdkdes, rindex[:,0], 'morgan', 'SimiStdNP_DNN_morgan')  
     m2 = build_RI_model_descriptor(morgan, cdkdes, rindex[:,2], 'morgan', 'StdPolar_DNN_morgan')
     m3 = build_RI_model_descriptor(morgan, cdkdes, rindex[:,0], 'descriptor', 'SimiStdNP_DNN_descriptor')
     m4 = build_RI_model_descriptor(morgan, cdkdes, rindex[:,2], 'descriptor', 'StdPolar_DNN_descriptor')
@@ -216,6 +216,12 @@ if __name__ == '__main__':
     m8 = build_RI_model_CNN(smiles, rindex[:,2], 'single_channel', 'StdPolar_CNN_single')
     m9 = build_RI_model_CNN(smiles, rindex[:,0], 'multi_channel', 'SimiStdNP_CNN_multi')
     m10 = build_RI_model_CNN(smiles, rindex[:,2], 'multi_channel', 'StdPolar_CNN_multi')
+    
+    m11 = build_RI_model_descriptor(morgan, cdkdes, rindex[:,1], 'morgan', 'StdNP_DNN_morgan')
+    m12 = build_RI_model_descriptor(morgan, cdkdes, rindex[:,1], 'descriptor', 'StdNP_DNN_descriptor')
+    m13 = build_RI_model_descriptor(morgan, cdkdes, rindex[:,1], 'all', 'StdNP_DNN_descriptor')
+    m14 = build_RI_model_CNN(smiles, rindex[:,1], 'single_channel', 'StdNP_CNN_single')
+    m15 = build_RI_model_CNN(smiles, rindex[:,1], 'multi_channel', 'StdNP_CNN_multi')
 
     output = pd.DataFrame(columns= ['model', 'column', 'mae', 'r2'])
     output.loc[0] = ['DNN_morgan', 'SimiStdNP', m1['mae'], m1['r2']]
@@ -228,8 +234,9 @@ if __name__ == '__main__':
     output.loc[7] = ['CNN_single', 'StdPolar', m8['mae'], m8['r2']]
     output.loc[8] = ['CNN_multi', 'SimiStdNP', m9['mae'], m9['r2']]
     output.loc[9] = ['CNN_multi', 'StdPolar', m10['mae'], m10['r2']]
-    output.to_csv('Result/retention.csv')
-
-
-
-            
+    output.loc[10] = ['DNN_morgan', 'StdNP', m11['mae'], m11['r2']]
+    output.loc[11] = ['DNN_descriptor', 'StdNP', m12['mae'], m12['r2']]
+    output.loc[12] = ['DNN_all', 'StdNP', m13['mae'], m13['r2']]
+    output.loc[13] = ['CNN_single', 'StdNP', m14['mae'], m14['r2']]
+    output.loc[14] = ['CNN_multi', 'StdNP', m15['mae'], m15['r2']]
+    output.to_csv('Result/retention.csv')            
