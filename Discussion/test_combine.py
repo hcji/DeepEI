@@ -82,6 +82,7 @@ if __name__ == '__main__':
     output = pd.DataFrame(columns=['smiles', 'mass', 'score', 'rank'])
     for i in tqdm(range(len(smiles))):
         smi = smiles[i]
+        std_smi = Chem.MolToSmiles(Chem.MolFromSmiles(smi))
         mass = molwt[i]
         speci = spec[i]
         pred_fp = pred_fps[i]
@@ -95,7 +96,11 @@ if __name__ == '__main__':
         true_score_sp = weitht_dot_product(speci, pred_sp) # sp score of the true compound
         true_score = 0.5*true_score_fp + 0.5*true_score_sp
         
-        candidate = np.where(np.abs(nist_masses - mass) < 5)[0]
+        candidate = np.where(np.abs(nist_masses - mass) < 5)[0] # candidate of nist
+        cand_smi = nist_smiles[candidate]
+        rep_ind = np.where(cand_smi == std_smi)[0] # if the compound in nist, remove it.
+        candidate = np.delete(candidate, rep_ind)
+        
         fp_scores = get_fp_score(pred_fp, nist_fps[candidate, :]) # scores of all candidtates
         sp_scores = get_score(speci, nist_spec[candidate,:], m='wdp')
         cand_scores = 0.5*fp_scores + 0.5*sp_scores

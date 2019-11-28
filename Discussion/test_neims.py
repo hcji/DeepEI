@@ -18,6 +18,8 @@ write_sdf = robjects.globalenv['write_sdf']
 
 def writeSDF(smi, file):
     m = Chem.MolFromSmiles(smi)
+    if m is None:
+        raise ValueError('invalid smiles')
     sio = StringIO()
     w = Chem.SDWriter(sio)
     w.write(m)
@@ -47,7 +49,7 @@ def parser_NEIMS(sdf):
 def dot_product(a, b):
     a = np.squeeze(np.asarray(a))
     b = np.squeeze(np.asarray(b))
-    return np.dot(a,b)/ np.sqrt((np.dot(a,a)* np.dot(b,b)))
+    return np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 def weitht_dot_product(a, b):
     a = np.squeeze(np.asarray(a))
@@ -55,7 +57,7 @@ def weitht_dot_product(a, b):
     w = np.arange(len(a))
     wa = np.sqrt(a) * w
     wb = np.sqrt(b) * w
-    return np.dot(wa,wb) / np.sqrt((np.dot(wa,wa)* np.dot(wb,wb)))
+    return np.dot(wa,wb) / (np.linalg.norm(wa) * np.linalg.norm(wb))
 
 def get_score(x, X, m='dp'):
     if m == 'dp':
@@ -99,9 +101,16 @@ if __name__ == '__main__':
     output = pd.DataFrame(columns=['smiles', 'mass', 'score', 'rank'])
     for i in tqdm(range(len(smiles))):
         smi = smiles[i] # smiles
+        try:
+            std_smi = Chem.MolToSmiles(Chem.MolFromSmiles(smi))
+        except:
+            std_smi = ''
         specr = spec[i] # true spectrum
         mass = molwt[i] # true mol weight
-        writeSDF(smi, 'Temp/mol.sdf')
+        try:
+            writeSDF(smi, 'Temp/mol.sdf')
+        except:
+            continue
         cwd = 'E:\\project\\deep-molecular-massspec'
         cmd = 'python make_spectra_prediction.py --input_file=E:/project/DeepEI/Temp/mol.sdf --output_file=E:/project/DeepEI/Temp/mol_anno.sdf --weights_dir=model/massspec_weights'
         subprocess.call(cmd, cwd=cwd) # predict spectrum with neims
@@ -119,10 +128,13 @@ if __name__ == '__main__':
         except:
             continue
         
-        speci = spec[i]
         candidate = np.where(np.abs(nist_masses - mass) < 5)[0] # candidate of nist
-        true_score = weitht_dot_product(speci, pred_vec) # score of true compound
-        cand_score = get_score(speci, nist_spec[candidate,:], m='wdp') # score of nist candidates
+        cand_smi = nist_smiles[candidate]
+        rep_ind = np.where(cand_smi == std_smi)[0] # if the compound in nist, remove it.
+        candidate = np.delete(candidate, rep_ind)
+        
+        true_score = weitht_dot_product(specr, pred_vec) # score of true compound
+        cand_score = get_score(specr, nist_spec[candidate,:], m='wdp') # score of nist candidates
         rank = len(np.where(cand_score > true_score)[0]) + 1 # rank
         pred_spec.append(pred_vec)
         os.unlink('Temp/mol.sdf')
