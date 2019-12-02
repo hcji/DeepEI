@@ -59,16 +59,21 @@ if __name__ == '__main__':
     output = pd.DataFrame(columns=['smiles', 'mass', 'fp_score', 'rank'])
     for i in tqdm(range(len(smiles))):
         smi = smiles[i]
+        std_smi = Chem.MolToSmiles(Chem.MolFromSmiles(smi))
         mass = molwt[i]
         pred_fp = pred_fps[i]
         try:
-            true_fp = np.array(get_cdk_fingerprints(smi)) # true fingerprint of the "unknown"
+            true_fp = np.array(get_cdk_fingerprints(std_smi)) # true fingerprint of the "unknown"
         except:
             continue
         true_fp = true_fp[rfp]
         true_score = jaccard_score(pred_fp, true_fp)  # score of the true compound
-        
-        candidate = np.where(np.abs(nist_masses - mass) < 5)[0]
+
+        candidate = np.where(np.abs(nist_masses - mass) < 5)[0] # candidate of nist
+        cand_smi = nist_smiles[candidate]
+        rep_ind = np.where(cand_smi == std_smi)[0] # if the compound in nist, remove it.
+        candidate = np.delete(candidate, rep_ind)
+
         fp_scores = get_fp_score(pred_fp, nist_fps[candidate, :]) # scores of all candidtates
         rank = len(np.where(fp_scores > true_score)[0]) + 1
         
