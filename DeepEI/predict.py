@@ -29,10 +29,14 @@ def predict_RI(smiles, mode='SimiStdNP'):
     return pred
 
 
-def predict_fingerprint(spec):
+def predict_fingerprint(spec, fpkeep):
     files = os.listdir('Model/Fingerprint')
     rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
     rfp = np.sort(rfp)
+    
+    rfp = set(rfp).intersection(set(fpkeep))
+    rfp = np.sort(list(rfp)).astype(int)
+    
     files = [str(f) + '.h5' for f in rfp]
     modjs = open('Model/Fingerprint/model.json', 'r').read()
     model = model_from_json(modjs)

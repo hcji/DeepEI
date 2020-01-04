@@ -10,12 +10,6 @@ import pandas as pd
 from rdkit import Chem
 from io import StringIO
 
-import rpy2.robjects as robjects
-import rpy2.robjects.numpy2ri as numpy2ri
-numpy2ri.activate()
-robjects.r('''source('DeepEI/rcdk.R')''')
-write_sdf = robjects.globalenv['write_sdf']
-
 def writeSDF(smi, file):
     m = Chem.MolFromSmiles(smi)
     if m is None:
@@ -112,17 +106,10 @@ if __name__ == '__main__':
         except:
             continue
         cwd = 'E:\\project\\deep-molecular-massspec'
-        cmd = 'python make_spectra_prediction.py --input_file=E:/project/DeepEI/Temp/mol.sdf --output_file=E:/project/DeepEI/Temp/mol_anno.sdf --weights_dir=model/massspec_weights'
+        cmd = 'python make_spectra_prediction.py --input_file=E:/project/DeepEI/Temp/mol.sdf --output_file=E:/project/DeepEI/Temp/mol_anno.sdf --weights_dir=retrain/models/output'
         subprocess.call(cmd, cwd=cwd) # predict spectrum with neims
         try:
             pred_speci = parser_NEIMS('Temp/mol_anno.sdf')
-            '''
-            mz, intensity = pred_speci['mz'], pred_speci['intensity']
-            intensity /= max(intensity)
-            mza, intensitya = vec2ms(specr)
-            plt.vlines(mz, np.zeros(len(mz)), intensity, color='red')
-            plt.vlines(mza, np.zeros(len(mza)), -intensitya, color='blue')
-            '''
             pred_vec = ms2vec(pred_speci['mz'], pred_speci['intensity']) # spectrum to vector
             os.unlink('Temp/mol_anno.sdf')
         except:
@@ -130,8 +117,31 @@ if __name__ == '__main__':
         
         candidate = np.where(np.abs(nist_masses - mass) < 5)[0] # candidate of nist
         cand_smi = nist_smiles[candidate]
+        cand_spec = nist_spec[candidate,:]
         rep_ind = np.where(cand_smi == std_smi)[0] # if the compound in nist, remove it.
         candidate = np.delete(candidate, rep_ind)
+        
+        # predict spectrum
+        mz, intensity = pred_speci['mz'], pred_speci['intensity']  
+        intensity /= max(intensity)
+        pred_vec = ms2vec(mz, intensity)
+        
+        # nist spectrum
+        nist_vec = np.squeeze(cand_spec[rep_ind[0],:].tolist())
+        mz_1, intensity_1 = vec2ms(nist_vec)
+        
+        # massbank spectrum
+        mz_2, intensity_2 = vec2ms(specr)
+        
+        # compare pred and nist
+        plt.vlines(mz, np.zeros(len(mz)), intensity, color='red')
+        plt.vlines(mz_1, np.zeros(len(mz_1)), -intensity_1, color='blue')
+        weitht_dot_product(pred_vec, nist_vec)
+        
+        # compare pred and massbank
+        plt.vlines(mz, np.zeros(len(mz)), intensity, color='red')
+        plt.vlines(mz_2, np.zeros(len(mz_2)), -intensity_2, color='blue')   
+        weitht_dot_product(pred_vec, specr)
         
         true_score = weitht_dot_product(specr, pred_vec) # score of true compound
         cand_score = get_score(specr, nist_spec[candidate,:], m='wdp') # score of nist candidates

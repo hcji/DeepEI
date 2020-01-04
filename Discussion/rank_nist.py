@@ -40,6 +40,10 @@ if __name__ == '__main__':
     keep = np.array(split['keep'])
     isolate = np.array(split['isolate'])
     
+    # only keep fingerprint with f1 > 0.5
+    accuracy = pd.read_csv('Result/fingerprint_DNN.csv')
+    fpkeep = accuracy['ind'][np.where(accuracy['f1'] > 0.5)[0]]
+    
     # ms for test
     test_smiles = smiles[isolate]
     test_mass = masses[isolate]
@@ -50,14 +54,15 @@ if __name__ == '__main__':
     # included fingerprint
     files = os.listdir('Model/Fingerprint')
     rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
-    rfp = np.sort(rfp)
+    rfp = set(rfp).intersection(set(fpkeep))
+    rfp = np.sort(list(rfp)).astype(int)
     
     rindex = predict_RI(smiles, mode='SimiStdNP')[:,0] # predicted ri
     cdk_fp = load_npz('Data/CDK_fp.npz')
     cdk_fp = csr_matrix(cdk_fp)[:, rfp].todense()
     
     # predict fingerprints via ms
-    pred_fp = predict_fingerprint(test_spec)
+    pred_fp = predict_fingerprint(test_spec, fpkeep)
     
     # rank
     output = pd.DataFrame(columns=['smiles', 'mass', 'fp_score', 'rank_1', 'rank_2', 'rank_3'])
