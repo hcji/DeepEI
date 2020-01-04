@@ -24,14 +24,15 @@ class PLSDA:
         for n in ncomps:
             plsda = PLSRegression(n_components=n).fit(X=self.X_tr, Y=self.Y_tr)
             Y_valhat = plsda.predict(self.X_dev)
-            Y_valhat = np.round(Y_valhat[:,0])
+            Y_valhat = np.array([int(pos > neg) for (pos, neg) in Y_valhat])
             Y_val_acc = accuracy_score(Y_dev, Y_valhat)
             if Y_val_acc > best_acc:
                 best_acc = Y_val_acc
                 self.model = plsda
     
     def test(self):
-        Y_pred = np.round(self.model.predict(self.X_ts))
+        Y_pred = self.model.predict(self.X_ts)
+        Y_pred = np.array([int(pos > neg) for (pos, neg) in Y_pred])
         f1 = f1_score(self.Y_ts[:,0], Y_pred[:,0])
         precision = precision_score(self.Y_ts[:,0], Y_pred[:,0])
         recall = recall_score(self.Y_ts[:,0], Y_pred[:,0])

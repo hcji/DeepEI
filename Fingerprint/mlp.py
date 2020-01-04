@@ -5,6 +5,7 @@ Created on Sat Jan  4 14:07:08 2020
 @author: hcji
 """
 
+import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input

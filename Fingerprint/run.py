@@ -32,7 +32,7 @@ fps = csr_matrix(fps)[keep,:]
 
 # build model
 mlp_result = open('Fingerprint/results/mlp_result.txt', 'a+')
-cnn_result = open('Fingerprint/results/cnn_result.txt', 'a+')
+# cnn_result = open('Fingerprint/results/cnn_result.txt', 'a+')
 lr_result = open('Fingerprint/results/lr_result.txt', 'a+')
 plsda_result = open('Fingerprint/results/plsda_result.txt', 'a+')
 xgb_result = open('Fingerprint/results/xgb_result.txt', 'a+')
@@ -52,14 +52,14 @@ for i in tqdm(range(fps.shape[1])):
     mlp_res = mlp.test()
     mlp_result.write("\t".join([str(i)] + [str(j) for j in mlp_res]))
     mlp.save('Fingerprint/mlp_models/{}.h5'.format(i))
-    
+    '''
     # cnn model
     cnn = CNN(spec, Y)
     cnn.train()
     cnn_res = cnn.test()
     cnn_result.write("\t".join([str(i)] + [str(j) for j in cnn_res]))
     cnn.save('Fingerprint/cnn_models/{}.h5'.format(i))
-    
+    '''
     # plsda model
     plsda = PLSDA(spec, Y)
     plsda.train()
@@ -79,7 +79,7 @@ for i in tqdm(range(fps.shape[1])):
     xgb_result.write("\t".join([str(i)] + [str(j) for j in xgb_res]))
 
 mlp_result.close()
-cnn_result.close()
+# cnn_result.close()
 lr_result.close()
 plsda_result.close()
 xgb_result.close()
