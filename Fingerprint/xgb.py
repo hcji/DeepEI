@@ -20,7 +20,7 @@ class XGBoost:
         self.model = XGBClassifier().fit(self.X_tr, self.Y_tr)
     
     def test(self):
-        Y_pred = self.model.predict(self.X_ts)
+        Y_pred = np.round(self.model.predict(self.X_ts))
         f1 = f1_score(self.Y_ts, Y_pred)
         precision = precision_score(self.Y_ts, Y_pred)
         recall = recall_score(self.Y_ts, Y_pred)
