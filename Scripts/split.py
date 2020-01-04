@@ -24,7 +24,6 @@ train_index = [i for i in range(len(all_smiles)) if i not in test_index]
 
 # save split result
 split = {'isolate': test_index, 'keep': train_index}
-with open('Data/split.json', 'w') as js:
+with open('DeepEI/data/split.json', 'w') as js:
     json.dump(split, js)
-    
     

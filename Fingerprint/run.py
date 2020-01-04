@@ -21,10 +21,10 @@ from Fingerprint.lr import LR
 from Fingerprint.xgb import XGBoost
 
 # load data
-with open('Data/split.json', 'r') as js:
+with open('DeepEI/data/split.json', 'r') as js:
     keep = np.array(json.load(js)['keep'])
-spec = load_npz('Data/Peak_data.npz')
-fps = load_npz('Data/CDK_fp.npz')
+spec = load_npz('DeepEI/data/peakvec.npz')
+fps = load_npz('DeepEI/data/fingerprints.npz')
 
 # exclude isolate test data
 spec = spec.todense()[keep,:]
@@ -44,37 +44,42 @@ for i in tqdm(range(fps.shape[1])):
     fr = np.sum(y) / len(y)
     if (fr < 0.1) or (fr > 0.9):
         continue
-    Y = np.hstack((y, (1-y)))
+    Y = np.vstack((y, (1-y))).transpose()
     
     # mlp model
     mlp = MLP(spec, Y)
     mlp.train()
     mlp_res = mlp.test()
-    mlp_result.write("\t".join([str(i) for i in mlp_res]))
+    mlp_result.write("\t".join([str(i)] + [str(j) for j in mlp_res]))
     mlp.save('Fingerprint/mlp_models/{}.h5'.format(i))
     
     # cnn model
     cnn = CNN(spec, Y)
     cnn.train()
     cnn_res = cnn.test()
-    cnn_result.write("\t".join([str(i) for i in cnn_res]))
+    cnn_result.write("\t".join([str(i)] + [str(j) for j in cnn_res]))
     cnn.save('Fingerprint/cnn_models/{}.h5'.format(i))
     
     # plsda model
     plsda = PLSDA(spec, Y)
     plsda.train()
     plsda_res = plsda.test()
-    plsda_result.write("\t".join([str(i) for i in plsda_res]))
+    plsda_result.write("\t".join([str(i)] + [str(j) for j in plsda_res]))
     
     # logistic regression
     lr = LR(spec, y)
     lr.train()
     lr_res = lr.test()
-    lr_result.write("\t".join([str(i) for i in lr_res]))
+    lr_result.write("\t".join([str(i)] + [str(j) for j in lr_res]))
     
     # xgboost
     xgb = XGBoost(spec, y)
     xgb.train()
     xgb_res = xgb.test()
-    xgb_result.write("\t".join([str(i) for i in xgb_res]))
-    
+    xgb_result.write("\t".join([str(i)] + [str(j) for j in xgb_res]))
+
+mlp_result.close()
+cnn_result.close()
+lr_result.close()
+plsda_result.close()
+xgb_result.close()
