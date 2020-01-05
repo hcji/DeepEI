@@ -31,12 +31,6 @@ spec = spec.todense()[keep,:]
 fps = csr_matrix(fps)[keep,:]
 
 # build model
-mlp_result = open('Fingerprint/results/mlp_result.txt', 'a+')
-# cnn_result = open('Fingerprint/results/cnn_result.txt', 'a+')
-lr_result = open('Fingerprint/results/lr_result.txt', 'a+')
-plsda_result = open('Fingerprint/results/plsda_result.txt', 'a+')
-xgb_result = open('Fingerprint/results/xgb_result.txt', 'a+')
-
 for i in tqdm(range(fps.shape[1])):
     y = fps[:,i].todense()
     y = np.squeeze(np.asarray(y))
@@ -45,6 +39,12 @@ for i in tqdm(range(fps.shape[1])):
     if (fr < 0.1) or (fr > 0.9):
         continue
     Y = np.vstack((y, (1-y))).transpose()
+    
+    mlp_result = open('Fingerprint/results/mlp_result.txt', 'a+')
+    # cnn_result = open('Fingerprint/results/cnn_result.txt', 'a+')
+    lr_result = open('Fingerprint/results/lr_result.txt', 'a+')
+    plsda_result = open('Fingerprint/results/plsda_result.txt', 'a+')
+    xgb_result = open('Fingerprint/results/xgb_result.txt', 'a+')
     
     # mlp model
     mlp = MLP(spec, Y)
@@ -78,8 +78,8 @@ for i in tqdm(range(fps.shape[1])):
     xgb_res = xgb.test()
     xgb_result.write("\t".join([str(i)] + [str(j) for j in xgb_res]))
 
-mlp_result.close()
-# cnn_result.close()
-lr_result.close()
-plsda_result.close()
-xgb_result.close()
+    mlp_result.close()
+    # cnn_result.close()
+    lr_result.close()
+    plsda_result.close()
+    xgb_result.close()

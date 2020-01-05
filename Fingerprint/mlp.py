@@ -31,7 +31,7 @@ class MLP:
         model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['acc'])
         self.model = model
         
-    def train(self, epochs=5):
+    def train(self, epochs=8):
         self.model.fit(self.X_tr, self.Y_tr, epochs=epochs)
     
     def test(self):

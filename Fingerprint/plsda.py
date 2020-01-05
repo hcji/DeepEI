@@ -33,9 +33,9 @@ class PLSDA:
     def test(self):
         Y_pred = self.model.predict(self.X_ts)
         Y_pred = np.array([int(pos > neg) for (pos, neg) in Y_pred])
-        f1 = f1_score(self.Y_ts[:,0], Y_pred[:,0])
-        precision = precision_score(self.Y_ts[:,0], Y_pred[:,0])
-        recall = recall_score(self.Y_ts[:,0], Y_pred[:,0])
-        accuracy = accuracy_score(self.Y_ts[:,0], Y_pred[:,0])
+        f1 = f1_score(self.Y_ts[:,0], Y_pred)
+        precision = precision_score(self.Y_ts[:,0], Y_pred)
+        recall = recall_score(self.Y_ts[:,0], Y_pred)
+        accuracy = accuracy_score(self.Y_ts[:,0], Y_pred)
         return accuracy, precision, recall, f1
         
