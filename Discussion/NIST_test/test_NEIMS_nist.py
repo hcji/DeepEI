@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from DeepEI.utils import ms2vec
-from DeepEI.utils import *
 from rdkit import Chem
 from io import StringIO
 
@@ -29,12 +28,12 @@ def writeSDF(smi, file):
         f.write(string)
     
 
-with open('Data/split.json', 'r') as js:
+with open('DeepEI/data/split.json', 'r') as js:
     j = json.load(js)
     keep = np.array(j['keep'])
-    test = np.array(j['isolate']) # never used when training
+    test = np.array(j['isolate'])
 
-smiles = np.array(json.load(open('Data/All_smiles.json')))
+smiles = np.array(json.load(open('DeepEI/data/all_smiles.json')))
 
 def parser_NEIMS(sdf):
     with open(sdf) as t:
@@ -91,15 +90,14 @@ for i in tqdm(test):
     pred_spec.append(pred_vec)
     os.unlink('Temp/mol.sdf')
 pred_spec = np.array(pred_spec)
-np.save('Data/neims_spec_nist.npy', pred_spec)
+np.save('Discussion/NIST_test/neims_spec_nist.npy', pred_spec)
 
 if __name__ == '__main__':
     
     from scipy.sparse import load_npz
     
-    smiles = np.array(json.load(open('Data/All_smiles.json')))
-    masses = np.load('Data/MolWt.npy')
-    spec = load_npz('Data/Peak_data.npz').todense()
+    masses = np.load('DeepEI/data/molwt.npy')
+    spec = load_npz('DeepEI/data/peakvec.npz').todense()
     
     with open('Data/split.json', 'r') as js:
         split = json.load(js)
@@ -109,28 +107,29 @@ if __name__ == '__main__':
     # ms for test
     test_smiles = smiles[isolate]
     test_mass = masses[isolate]
-    test_spec = load_npz('Data/Peak_data.npz')
-    test_spec = test_spec[isolate, :].todense()
+    test_spec = spec[isolate, :]
     
-    pred_spec = np.load('Data/neims_spec_nist.npy')
+    pred_spec = np.load('Discussion/NIST_test/neims_spec_nist.npy')
     
     output = pd.DataFrame(columns=['smiles', 'mass', 'score', 'rank'])
     for i in tqdm(range(len(isolate))):
         smi = test_smiles[i]
         mass = test_mass[i]
         true_vec = test_spec[i]
-        
         pred_vec = pred_spec[i]
-        true_score = weitht_dot_product(true_vec, pred_vec)
         
+        if np.sum(pred_vec) == 0:
+            continue
+        
+        true_score = weitht_dot_product(true_vec, pred_vec) # score of true candidate
+
         candidate = np.where(np.abs(masses - mass) < 5)[0] # candidate of nist
         cand_smi = smiles[candidate]
         rep_ind = np.where(cand_smi == smi)[0] # if the compound in nist, remove it.
         candidate = np.delete(candidate, rep_ind)
         cand_score = get_score(true_vec, spec[candidate,:], m='wdp') # score of nist candidates
         
-        rank = len(np.where(cand_score > true_score)[0]) + 1
+        rank = len(np.where(cand_score > true_score)[0]) + 1 # rank
         output.loc[len(output)] = [smi, mass, true_score, rank]
         output.to_csv('rank_neims_nist.csv')
-        
-        
+            
