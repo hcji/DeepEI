@@ -33,76 +33,52 @@ def get_fp_score(fp, all_fps):
 
 if __name__ == '__main__':
     
-    smiles = np.array(json.load(open('Data/All_smiles.json')))
-    masses = np.load('Data/MolWt.npy')
-    with open('Data/split.json', 'r') as js:
+    smiles = np.array(json.load(open('DeepEI/data/all_smiles.json')))
+    masses = np.load('DeepEI/data/molwt.npy')
+    with open('DeepEI/data/split.json', 'r') as js:
         split = json.load(js)
     keep = np.array(split['keep'])
     isolate = np.array(split['isolate'])
     
     # only keep fingerprint with f1 > 0.5
-    accuracy = pd.read_csv('Result/fingerprint_DNN.csv')
-    fpkeep = accuracy['ind'][np.where(accuracy['f1'] > 0.5)[0]]
+    mlp = pd.read_csv('Fingerprint/results/mlp_result.txt', sep='\t', header=None)
+    mlp.columns = ['id', 'accuracy', 'precision', 'recall', 'f1']
+    fpkeep = mlp['id'][np.where(mlp['f1'] > 0.5)[0]]
     
     # ms for test
     test_smiles = smiles[isolate]
     test_mass = masses[isolate]
-    test_spec = load_npz('Data/Peak_data.npz')
+    test_spec = load_npz('DeepEI/data/peakvec.npz')
     test_spec = test_spec[isolate, :].todense()
-    test_ri = np.load('Data/RI_data.npy')[isolate,0]
     
     # included fingerprint
-    files = os.listdir('Model/Fingerprint')
+    files = os.listdir('Fingerprint/mlp_models')
     rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
     rfp = set(rfp).intersection(set(fpkeep))
     rfp = np.sort(list(rfp)).astype(int)
     
-    rindex = predict_RI(smiles, mode='SimiStdNP')[:,0] # predicted ri
-    cdk_fp = load_npz('Data/CDK_fp.npz')
+    cdk_fp = load_npz('DeepEI/data/fingerprints.npz')
     cdk_fp = csr_matrix(cdk_fp)[:, rfp].todense()
     
     # predict fingerprints via ms
     pred_fp = predict_fingerprint(test_spec, fpkeep)
     
     # rank
-    output = pd.DataFrame(columns=['smiles', 'mass', 'fp_score', 'rank_1', 'rank_2', 'rank_3'])
+    output = pd.DataFrame(columns=['smiles', 'mass', 'fp_score', 'rank', 'candidates'])
     for i in tqdm(range(len(isolate))):
         smi = test_smiles[i]
         mass = test_mass[i]
-        ri = test_ri[i]
         pred_fpi = pred_fp[i,:]
         trueindex = np.where(smiles == smi)[0][0]
         
-        # with ri filter
-        candidate_1 = np.where(np.abs(rindex - ri) < 200)[0] # ri filter with 200
-        w_true = np.where(candidate_1==trueindex)[0]
+        # mass filter
+        candidate = np.where(np.abs(masses - mass) < 5)[0]
+        w_true = np.where(candidate==trueindex)[0]
         if len(w_true)==0:
-            rank_1 = 99999
+            rank = 99999
         else:
-            fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate_1, :])
+            fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate, :])
             true_fp_score = fp_scores[w_true[0]]
-            rank_1 = len(np.where(fp_scores > true_fp_score)[0]) + 1
-            
-        # with mass filter
-        candidate_2 = np.where(np.abs(masses - mass) < 5)[0]
-        w_true = np.where(candidate_2==trueindex)[0]
-        if len(w_true)==0:
-            rank_2 = 99999
-        else:
-            fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate_2, :])
-            true_fp_score = fp_scores[w_true[0]]
-            rank_2 = len(np.where(fp_scores > true_fp_score)[0]) + 1        
-        
-        # with ri and mass filter
-        candidate_3 = np.intersect1d(candidate_1, candidate_2)
-        w_true = np.where(candidate_3==trueindex)[0]
-        if len(w_true)==0:
-            rank_3 = 99999
-        else:
-            fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate_3, :])
-            true_fp_score = fp_scores[w_true[0]]
-            rank_3 = len(np.where(fp_scores > true_fp_score)[0]) + 1        
-        
-        output.loc[len(output)] = [smi, mass, true_fp_score, rank_1, rank_2, rank_3]
-        output.to_csv('rank_nist.csv')
+            rank = len(np.where(fp_scores > true_fp_score)[0]) + 1        
+    output.to_csv('Discussion/NIST_test/results/DeepEI_nist.csv')
         

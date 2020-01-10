@@ -130,6 +130,6 @@ if __name__ == '__main__':
         cand_score = get_score(true_vec, spec[candidate,:], m='wdp') # score of nist candidates
         
         rank = len(np.where(cand_score > true_score)[0]) + 1 # rank
-        output.loc[len(output)] = [smi, mass, true_score, rank]
-        output.to_csv('rank_neims_nist.csv')
+    output.loc[len(output)] = [smi, mass, true_score, rank]
+    output.to_csv('rank_neims_nist.csv')
             

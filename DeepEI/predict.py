@@ -30,7 +30,7 @@ def predict_RI(smiles, mode='SimiStdNP'):
 
 
 def predict_fingerprint(spec, fpkeep):
-    files = os.listdir('Model/Fingerprint')
+    files = os.listdir('Fingerprint/mlp_models')
     rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
     rfp = np.sort(rfp)
     
@@ -38,11 +38,11 @@ def predict_fingerprint(spec, fpkeep):
     rfp = np.sort(list(rfp)).astype(int)
     
     files = [str(f) + '.h5' for f in rfp]
-    modjs = open('Model/Fingerprint/model.json', 'r').read()
+    modjs = open('Fingerprint/mlp_models/model.json', 'r').read()
     model = model_from_json(modjs)
     pred_fp = np.zeros((spec.shape[0], len(files)))
     for i, f in enumerate(tqdm(files)):
-        model.load_weights('Model/Fingerprint/' + f)
+        model.load_weights('Fingerprint/mlp_models/' + f)
         pred = np.round(model.predict(spec))[:,0]
         pred_fp[:,i] = pred  
     return pred_fp
