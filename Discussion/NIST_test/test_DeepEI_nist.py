@@ -79,6 +79,7 @@ if __name__ == '__main__':
         else:
             fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate, :])
             true_fp_score = fp_scores[w_true[0]]
-            rank = len(np.where(fp_scores > true_fp_score)[0]) + 1        
+            rank = len(np.where(fp_scores > true_fp_score)[0]) + 1 
+        output.loc[len(output)] = [smi, mass, true_fp_score, rank, len(candidate)]
     output.to_csv('Discussion/NIST_test/results/DeepEI_nist.csv')
         

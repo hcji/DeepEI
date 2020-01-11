@@ -30,7 +30,7 @@ if __name__ == '__main__':
     from rdkit.Chem.rdMolDescriptors import CalcExactMolWt
     from DeepEI.predict import predict_fingerprint
     
-    data = msp.read('Data/GCMS DB_AllPublic-KovatsRI-VS2.msp')
+    data = msp.read('E:/data/GCMS DB_AllPublic-KovatsRI-VS2.msp')
     smiles = []
     spec = []
     molwt = []
@@ -44,16 +44,21 @@ if __name__ == '__main__':
         smiles.append(smi)
         spec.append(ms2vec(ms[:,0], ms[:,1]))
     
-    spec = np.array(spec)
-    pred_fps = predict_fingerprint(spec) # predict fingerprint of the "unknown"
+    # only keep fingerprint with f1 > 0.5
+    mlp = pd.read_csv('Fingerprint/results/mlp_result.txt', sep='\t', header=None)
+    mlp.columns = ['id', 'accuracy', 'precision', 'recall', 'f1']
+    fpkeep = mlp['id'][np.where(mlp['f1'] > 0.5)[0]]
     
-    files = os.listdir('Model/Fingerprint')
+    files = os.listdir('Fingerprint/mlp_models')
     rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
     rfp = np.sort(rfp) # the index of the used fingerprint
     
-    nist_smiles = np.array(json.load(open('Data/All_smiles.json')))
-    nist_masses = np.load('Data/MolWt.npy')
-    nist_fps = load_npz('Data/CDK_fp.npz')
+    spec = np.array(spec)
+    pred_fps = predict_fingerprint(spec, fpkeep) # predict fingerprint of the "unknown"
+    
+    nist_smiles = np.array(json.load(open('DeepEI/data/all_smiles.json')))
+    nist_masses = np.load('DeepEI/data/molwt.npy')
+    nist_fps = load_npz('DeepEI/data/fingerprints.npz')
     nist_fps = csr_matrix(nist_fps)[:, rfp].todense() # fingerprints of nist compounds
     
     output = pd.DataFrame(columns=['smiles', 'mass', 'fp_score', 'rank'])
@@ -78,5 +83,5 @@ if __name__ == '__main__':
         rank = len(np.where(fp_scores > true_score)[0]) + 1
         
         output.loc[len(output)] = [smi, mass, true_score, rank]
-        output.to_csv('rank_massbank.csv')
+    output.to_csv('Discussion/MassBank_test/results/DeepEI_massbank.csv')
         
