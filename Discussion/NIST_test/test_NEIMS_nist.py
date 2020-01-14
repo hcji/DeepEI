@@ -71,7 +71,7 @@ def get_score(x, X, m='dp'):
     else:
         s = [weitht_dot_product(x, X[i,:]) for i in range(X.shape[0])]
     return s
-    
+'''    
 # predict ms of the isolate compounds
 # run once, then save
 pred_spec = []
@@ -91,28 +91,23 @@ for i in tqdm(test):
     os.unlink('Temp/mol.sdf')
 pred_spec = np.array(pred_spec)
 np.save('Discussion/NIST_test/neims_spec_nist.npy', pred_spec)
-
+'''
 if __name__ == '__main__':
     
     from scipy.sparse import load_npz
     
     masses = np.load('DeepEI/data/molwt.npy')
     spec = load_npz('DeepEI/data/peakvec.npz').todense()
-    
-    with open('Data/split.json', 'r') as js:
-        split = json.load(js)
-    keep = np.array(split['keep'])
-    isolate = np.array(split['isolate'])
 
     # ms for test
-    test_smiles = smiles[isolate]
-    test_mass = masses[isolate]
-    test_spec = spec[isolate, :]
+    test_smiles = smiles[test]
+    test_mass = masses[test]
+    test_spec = spec[test,:]
     
     pred_spec = np.load('Discussion/NIST_test/neims_spec_nist.npy')
     
     output = pd.DataFrame(columns=['smiles', 'mass', 'score', 'rank'])
-    for i in tqdm(range(len(isolate))):
+    for i in tqdm(range(len(test))):
         smi = test_smiles[i]
         mass = test_mass[i]
         true_vec = test_spec[i]
@@ -130,6 +125,6 @@ if __name__ == '__main__':
         cand_score = get_score(true_vec, spec[candidate,:], m='wdp') # score of nist candidates
         
         rank = len(np.where(cand_score > true_score)[0]) + 1 # rank
-    output.loc[len(output)] = [smi, mass, true_score, rank]
+        output.loc[len(output)] = [smi, mass, true_score, rank]
     output.to_csv('rank_neims_nist.csv')
             
