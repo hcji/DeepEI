@@ -8,6 +8,8 @@ Created on Wed Nov  6 14:25:33 2019
 import numpy as np 
 from scipy.sparse import load_npz, csr_matrix
 from sklearn.metrics import accuracy_score, jaccard_score
+# from sklearn.metrics import accuracy_score, jaccard_similarity_score
+# jaccard_score = jaccard_similarity_score
 from libmetgem import msp
 from DeepEI.utils import ms2vec, vec2ms, get_cdk_fingerprints
 
@@ -48,18 +50,18 @@ if __name__ == '__main__':
     mlp = pd.read_csv('Fingerprint/results/mlp_result.txt', sep='\t', header=None)
     mlp.columns = ['id', 'accuracy', 'precision', 'recall', 'f1']
     fpkeep = mlp['id'][np.where(mlp['f1'] > 0.5)[0]]
-    
+    '''
     files = os.listdir('Fingerprint/mlp_models')
     rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
     rfp = np.sort(rfp) # the index of the used fingerprint
-    
+    '''
     spec = np.array(spec)
     pred_fps = predict_fingerprint(spec, fpkeep) # predict fingerprint of the "unknown"
     
     nist_smiles = np.array(json.load(open('DeepEI/data/all_smiles.json')))
     nist_masses = np.load('DeepEI/data/molwt.npy')
     nist_fps = load_npz('DeepEI/data/fingerprints.npz')
-    nist_fps = csr_matrix(nist_fps)[:, rfp].todense() # fingerprints of nist compounds
+    nist_fps = csr_matrix(nist_fps)[:, fpkeep].todense() # fingerprints of nist compounds
     
     output = pd.DataFrame(columns=['smiles', 'mass', 'fp_score', 'rank'])
     for i in tqdm(range(len(smiles))):
@@ -71,7 +73,7 @@ if __name__ == '__main__':
             true_fp = np.array(get_cdk_fingerprints(std_smi)) # true fingerprint of the "unknown"
         except:
             continue
-        true_fp = true_fp[rfp]
+        true_fp = true_fp[fpkeep]
         true_score = jaccard_score(pred_fp, true_fp)  # score of the true compound
 
         candidate = np.where(np.abs(nist_masses - mass) < 5)[0] # candidate of nist

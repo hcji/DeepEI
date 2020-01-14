@@ -73,9 +73,9 @@ if __name__ == '__main__':
     from rdkit.Chem.rdMolDescriptors import CalcExactMolWt
     from DeepEI.utils import ms2vec, vec2ms
     
-    nist_smiles = np.array(json.load(open('Data/All_smiles.json')))
-    nist_masses = np.load('Data/MolWt.npy')
-    nist_spec = load_npz('Data/Peak_data.npz').todense()
+    nist_smiles = np.array(json.load(open('DeepEI/data/all_smiles.json')))
+    nist_masses = np.load('DeepEI/data/molwt.npy')
+    nist_spec = load_npz('DeepEI/data/peakvec.npz').todense()
     
     data = msp.read('Data/GCMS DB_AllPublic-KovatsRI-VS2.msp')
     smiles = []
