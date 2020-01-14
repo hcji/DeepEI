@@ -77,7 +77,7 @@ if __name__ == '__main__':
     nist_masses = np.load('DeepEI/data/molwt.npy')
     nist_spec = load_npz('DeepEI/data/peakvec.npz').todense()
     
-    data = msp.read('Data/GCMS DB_AllPublic-KovatsRI-VS2.msp')
+    data = msp.read('E:/data/GCMS DB_AllPublic-KovatsRI-VS2.msp')
     smiles = []
     spec = []
     molwt = []
