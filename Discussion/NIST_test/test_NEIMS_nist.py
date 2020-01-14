@@ -71,11 +71,11 @@ def get_score(x, X, m='dp'):
     else:
         s = [weitht_dot_product(x, X[i,:]) for i in range(X.shape[0])]
     return s
-'''    
+
 # predict ms of the isolate compounds
 # run once, then save
-pred_spec = []
-for i in tqdm(test):
+pred_spec = np.zeros((len(test), 2000))
+for a, i in enumerate(tqdm(test)):
     smi = smiles[i]
     writeSDF(smi, 'Temp/mol.sdf')
     cwd = 'E:\\project\\deep-molecular-massspec'
@@ -86,12 +86,11 @@ for i in tqdm(test):
         pred_vec = ms2vec(speci['mz'], speci['intensity'])
         os.unlink('Temp/mol_anno.sdf')
     except:
-        pred_vec = np.ones(2000) #  # if error, use a zero vec as placeholder. but it won't count when comparsion.
-    pred_spec.append(pred_vec)
+        pred_vec = np.zeros(2000) #  # if error, use a zero vec as placeholder. but it won't count when comparsion.
+    pred_spec[a,:] = pred_vec
     os.unlink('Temp/mol.sdf')
-pred_spec = np.array(pred_spec)
 np.save('Discussion/NIST_test/neims_spec_nist.npy', pred_spec)
-'''
+
 if __name__ == '__main__':
     
     from scipy.sparse import load_npz
@@ -126,5 +125,5 @@ if __name__ == '__main__':
         
         rank = len(np.where(cand_score > true_score)[0]) + 1 # rank
         output.loc[len(output)] = [smi, mass, true_score, rank]
-    output.to_csv('rank_neims_nist.csv')
+    output.to_csv('Discussion/NIST_test/results/neims_nist.csv')
             
