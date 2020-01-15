@@ -106,7 +106,7 @@ if __name__ == '__main__':
         except:
             continue
         cwd = 'E:\\project\\deep-molecular-massspec'
-        cmd = 'python make_spectra_prediction.py --input_file=E:/project/DeepEI/Temp/mol.sdf --output_file=E:/project/DeepEI/Temp/mol_anno.sdf --weights_dir=retrain/models/output'
+        cmd = 'python make_spectra_prediction.py --input_file=E:/project/DeepEI/Temp/mol.sdf --output_file=E:/project/DeepEI/Temp/mol_anno.sdf --weights_dir=model/massspec_weights'
         subprocess.call(cmd, cwd=cwd) # predict spectrum with neims
         try:
             pred_speci = parser_NEIMS('Temp/mol_anno.sdf')
@@ -150,7 +150,7 @@ if __name__ == '__main__':
         os.unlink('Temp/mol.sdf')
         
         output.loc[len(output)] = [smi, mass, true_score, rank]
-        output.to_csv('rank_neims_massbank.csv')
+    output.to_csv('Discussion/MassBank_test/results/neims_massbank.csv')
     pred_spec = np.array(pred_spec)
-    np.save('Data/neims_spec_massbank.npy', pred_spec)
+    np.save('DeepEI/data/neims_spec_massbank.npy', pred_spec)
     
