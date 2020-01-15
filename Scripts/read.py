@@ -111,8 +111,8 @@ def collect():
  
     # save
     np.save('DeepEI/data/retention.npy', np.array(RI_data))
-    np.save('DeepEI/data/Data/descriptor.npy', np.array(CDK_des))
-    np.save('DeepEI/data/Data/molwt.npy', np.array(MolWt))
+    np.save('DeepEI/data/descriptor.npy', np.array(CDK_des))
+    np.save('DeepEI/data/molwt.npy', np.array(MolWt))
     
     Peak_data = csr_matrix(np.array(Peak_data))
     Morgan_fp = csr_matrix(np.array(Morgan_fp))

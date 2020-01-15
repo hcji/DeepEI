@@ -1,6 +1,6 @@
 ## DeepEI
 
-This is the repository of codes for the paper entitled "Predicting molecular fingerprint from electron−ionization mass spectrum with deep neural networks" (submit). This repository only contains the source codes without any data and pretrained models, due to the models were trained by NIST dataset.
+This is the repository of codes for the paper entitled "Predicting molecular fingerprint from electron−ionization mass spectrum with deep neural networks" (submit). This repository only contains the source codes without any data or pretrained models, due to the models were trained by NIST dataset.
 
 DeepEI contain two main parts: 1. Predicting molecular fingerprint from EI-MS (*Fingerprint* folder); 2. Predicting retention index from structure (*retention* folder). Each folder contains the codes for data pretreatment, model training and model selection.
 
