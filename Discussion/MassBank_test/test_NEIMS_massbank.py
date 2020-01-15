@@ -118,14 +118,14 @@ if __name__ == '__main__':
         candidate = np.where(np.abs(nist_masses - mass) < 5)[0] # candidate of nist
         cand_smi = nist_smiles[candidate]
         cand_spec = nist_spec[candidate,:]
-        rep_ind = np.where(cand_smi == std_smi)[0] # if the compound in nist, remove it.
+        # rep_ind = np.where(cand_smi == std_smi)[0] # if the compound in nist, remove it.
         candidate = np.delete(candidate, rep_ind)
         
         # predict spectrum
         mz, intensity = pred_speci['mz'], pred_speci['intensity']  
         intensity /= max(intensity)
         pred_vec = ms2vec(mz, intensity)
-        
+        '''
         # nist spectrum
         nist_vec = np.squeeze(cand_spec[rep_ind[0],:].tolist())
         mz_1, intensity_1 = vec2ms(nist_vec)
@@ -142,7 +142,7 @@ if __name__ == '__main__':
         plt.vlines(mz, np.zeros(len(mz)), intensity, color='red')
         plt.vlines(mz_2, np.zeros(len(mz_2)), -intensity_2, color='blue')   
         weitht_dot_product(pred_vec, specr)
-        
+        '''
         true_score = weitht_dot_product(specr, pred_vec) # score of true compound
         cand_score = get_score(specr, nist_spec[candidate,:], m='wdp') # score of nist candidates
         rank = len(np.where(cand_score > true_score)[0]) + 1 # rank
