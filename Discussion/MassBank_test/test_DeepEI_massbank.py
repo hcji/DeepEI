@@ -11,7 +11,8 @@ from sklearn.metrics import accuracy_score, jaccard_score
 # from sklearn.metrics import accuracy_score, jaccard_similarity_score
 # jaccard_score = jaccard_similarity_score
 from libmetgem import msp
-from DeepEI.utils import ms2vec, vec2ms, get_cdk_fingerprints
+from DeepEI.utils import get_cdk_fingerprints
+from DeepEI.predict import predict_fingerprint
 
 def get_fp_score(fp, all_fps):
     scores = np.zeros(all_fps.shape[0])
