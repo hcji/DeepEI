@@ -118,7 +118,7 @@ if __name__ == '__main__':
         candidate = np.where(np.abs(nist_masses - mass) < 5)[0] # candidate of nist
         cand_smi = nist_smiles[candidate]
         cand_spec = nist_spec[candidate,:]
-        # rep_ind = np.where(cand_smi == std_smi)[0] # if the compound in nist, remove it.
+        rep_ind = np.where(cand_smi == std_smi)[0] # if the compound in nist, remove it.
         candidate = np.delete(candidate, rep_ind)
         
         # predict spectrum
