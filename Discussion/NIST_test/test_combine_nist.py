@@ -73,16 +73,16 @@ if __name__ == '__main__':
     rfp = np.sort(rfp) # the index of the used fingerprint
     '''
     spec = np.array(spec)
-    pred_fps = predict_fingerprint(spec, fpkeep) # predict fingerprint of the "unknown"
+    pred_fps = predict_fingerprint(test_spec, fpkeep) # predict fingerprint of the "unknown"
     cdk_fp = load_npz('DeepEI/data/fingerprints.npz')
     cdk_fp = csr_matrix(cdk_fp)[:, fpkeep].todense()
     
     output = pd.DataFrame(columns=['smiles', 'mass', 'score', 'rank'])
-    for i in tqdm(range(len(smiles))):
-        smi = smiles[i]
+    for i in tqdm(range(len(test))):
+        smi = test_smiles[i]
         std_smi = Chem.MolToSmiles(Chem.MolFromSmiles(smi))
-        mass = masses[i]
-        speci = spec[i]
+        mass = test_mass[i]
+        speci = test_spec[i]
         pred_fp = pred_fps[i]
         pred_sp = pred_spec[i]
         try:
