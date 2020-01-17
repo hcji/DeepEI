@@ -89,7 +89,7 @@ if __name__ == '__main__':
         pred_fp = pred_fps[i]
         pred_sp = pred_spec[i]
         try:
-            true_fp = np.array(get_cdk_fingerprints(smi)) # true fingerprint of the "unknown"
+            true_fp = np.array(get_cdk_fingerprints(std_smi)) # true fingerprint of the "unknown"
         except:
             continue
         true_fp = true_fp[fpkeep]
