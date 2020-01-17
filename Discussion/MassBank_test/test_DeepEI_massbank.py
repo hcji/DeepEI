@@ -25,13 +25,12 @@ def get_fp_score(fp, all_fps):
 
 if __name__ == '__main__':
     
-    import os
     import json
     import pandas as pd
     from tqdm import tqdm
     from rdkit import Chem
     from rdkit.Chem.rdMolDescriptors import CalcExactMolWt
-    from DeepEI.predict import predict_fingerprint
+    from DeepEI.utils import ms2vec
     
     data = msp.read('E:/data/GCMS DB_AllPublic-KovatsRI-VS2.msp')
     smiles = []
