@@ -40,25 +40,19 @@ if __name__ == '__main__':
     keep = np.array(split['keep'])
     isolate = np.array(split['isolate'])
     
-    # only keep fingerprint with f1 > 0.5
-    mlp = pd.read_csv('Fingerprint/results/mlp_result.txt', sep='\t', header=None)
-    mlp.columns = ['id', 'accuracy', 'precision', 'recall', 'f1']
-    fpkeep = mlp['id'][np.where(mlp['f1'] > 0.5)[0]]
-    
     # ms for test
     test_smiles = smiles[isolate]
     test_mass = masses[isolate]
     test_spec = load_npz('DeepEI/data/peakvec.npz')
     test_spec = test_spec[isolate, :].todense()
     
-    # included fingerprint
-    files = os.listdir('Fingerprint/mlp_models')
-    rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
-    rfp = set(rfp).intersection(set(fpkeep))
-    rfp = np.sort(list(rfp)).astype(int)
+    # only keep fingerprint with f1 > 0.5
+    mlp = pd.read_csv('Fingerprint/results/mlp_result.txt', sep='\t', header=None)
+    mlp.columns = ['id', 'accuracy', 'precision', 'recall', 'f1']
+    fpkeep = mlp['id'][np.where(mlp['f1'] > 0.5)[0]]
     
     cdk_fp = load_npz('DeepEI/data/fingerprints.npz')
-    cdk_fp = csr_matrix(cdk_fp)[:, rfp].todense()
+    cdk_fp = csr_matrix(cdk_fp)[:, fpkeep].todense()
     
     # predict fingerprints via ms
     pred_fp = predict_fingerprint(test_spec, fpkeep)

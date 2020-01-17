@@ -26,7 +26,7 @@ axes[1, 1].violinplot( [mlp['f1'], plsda['f1'], lr['f1'], xgb['f1']] , showmeans
 axes[0, 0].set_ylabel('Accuracy')
 axes[0, 1].set_ylabel('Precision')
 axes[1, 0].set_ylabel('Recall')
-axes[1, 0].set_ylabel('F1 Score')
+axes[1, 1].set_ylabel('F1 Score')
 
 plt.setp(axes, xticklabels=['', 'MLP', '', 'PLS-DA', '', 'LR', '', 'XGBoost'])
 plt.show()
