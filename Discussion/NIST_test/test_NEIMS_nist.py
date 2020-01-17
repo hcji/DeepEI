@@ -65,7 +65,7 @@ def weitht_dot_product(a, b):
     wb = np.sqrt(b) * w
     return np.dot(wa,wb) / (np.linalg.norm(wa) * np.linalg.norm(wb))
 
-def get_score(x, X, m='dp'):
+def get_score(x, X, m='wdp'):
     if m == 'dp':
         s = [dot_product(x, X[i,:]) for i in range(X.shape[0])]
     else:

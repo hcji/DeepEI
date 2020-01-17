@@ -7,7 +7,9 @@ Created on Wed Nov 27 10:20:45 2019
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import jaccard_score
+# from sklearn.metrics import jaccard_score
+from sklearn.metrics import jaccard_similarity_score
+jaccard_score = jaccard_similarity_score
 
 def dot_product(a, b):
     a = np.squeeze(np.asarray(a))
@@ -22,7 +24,7 @@ def weitht_dot_product(a, b):
     wb = np.sqrt(b) * w
     return np.dot(wa,wb) / np.sqrt((np.dot(wa,wa)* np.dot(wb,wb)))
 
-def get_score(x, X, m='dp'):
+def get_score(x, X, m='wdp'):
     if m == 'dp':
         s = [dot_product(x, X[i,:]) for i in range(X.shape[0])]
     else:
@@ -40,7 +42,6 @@ def get_fp_score(fp, all_fps):
 
 if __name__ == '__main__':
 
-    import os
     import json
     from libmetgem import msp
     from scipy.sparse import load_npz, csr_matrix
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     from DeepEI.predict import predict_fingerprint
     from DeepEI.utils import ms2vec, vec2ms, get_cdk_fingerprints
     
-    data = msp.read('Data/GCMS DB_AllPublic-KovatsRI-VS2.msp')
+    data = msp.read('E:/data/GCMS DB_AllPublic-KovatsRI-VS2.msp')
     smiles = []
     spec = []
     molwt = []
@@ -64,20 +65,20 @@ if __name__ == '__main__':
         smiles.append(smi)
         spec.append(ms2vec(ms[:,0], ms[:,1]))
     
+    mlp = pd.read_csv('Fingerprint/results/mlp_result.txt', sep='\t', header=None)
+    mlp.columns = ['id', 'accuracy', 'precision', 'recall', 'f1']
+    fpkeep = mlp['id'][np.where(mlp['f1'] > 0.5)[0]]
+    
     spec = np.array(spec)
-    pred_fps = predict_fingerprint(spec) # predict fingerprint of the "unknown"
+    pred_fps = predict_fingerprint(spec, fpkeep) # predict fingerprint of the "unknown"
     
-    files = os.listdir('Model/Fingerprint')
-    rfp = np.array([int(f.split('.')[0]) for f in files if '.h5' in f])
-    rfp = np.sort(rfp) # the index of the used fingerprint
+    nist_smiles = np.array(json.load(open('DeepEI/data/all_smiles.json')))
+    nist_masses = np.load('DeepEI/data/molwt.npy')
+    nist_fps = load_npz('DeepEI/data/fingerprints.npz')
+    nist_fps = csr_matrix(nist_fps)[:, fpkeep].todense() # fingerprints of nist compounds 
+    nist_spec = load_npz('DeepEI/data/peakvec.npz').todense()
     
-    nist_smiles = np.array(json.load(open('Data/All_smiles.json')))
-    nist_masses = np.load('Data/MolWt.npy')
-    nist_fps = load_npz('Data/CDK_fp.npz')
-    nist_fps = csr_matrix(nist_fps)[:, rfp].todense() # fingerprints of nist compounds 
-    nist_spec = load_npz('Data/Peak_data.npz').todense()
-    
-    pred_spec = np.load('Data/neims_spec_massbank.npy') # spectra predicted by NEIMS
+    pred_spec = np.load('DeepEI/data/neims_spec_massbank.npy') # spectra predicted by NEIMS
     
     output = pd.DataFrame(columns=['smiles', 'mass', 'score', 'rank'])
     for i in tqdm(range(len(smiles))):
@@ -91,7 +92,7 @@ if __name__ == '__main__':
             true_fp = np.array(get_cdk_fingerprints(smi)) # true fingerprint of the "unknown"
         except:
             continue
-        true_fp = true_fp[rfp]
+        true_fp = true_fp[fpkeep]
         true_score_fp = jaccard_score(pred_fp, true_fp)  # fp score of the true compound
         true_score_sp = weitht_dot_product(speci, pred_sp) # sp score of the true compound
         true_score = 0.5*true_score_fp + 0.5*true_score_sp
@@ -108,4 +109,4 @@ if __name__ == '__main__':
         rank = len(np.where(cand_scores > true_score)[0]) + 1
         
         output.loc[len(output)] = [smi, mass, true_score, rank]
-        output.to_csv('rank_massbank_combine.csv')        
+        output.to_csv('Discussion/Massbank_test/results/combine_massbank.csv')        
