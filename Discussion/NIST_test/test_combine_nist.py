@@ -17,7 +17,7 @@ def dot_product(a, b):
 def weitht_dot_product(a, b):
     a = np.squeeze(np.asarray(a))
     b = np.squeeze(np.asarray(b))
-    w = np.arange(len(a))
+    w = np.arange(len(a)) + 1
     wa = np.sqrt(a) * w
     wb = np.sqrt(b) * w
     return np.dot(wa,wb) / np.sqrt((np.dot(wa,wa)* np.dot(wb,wb)))
