@@ -8,6 +8,8 @@ Created on Wed Nov 27 10:20:45 2019
 import numpy as np
 import pandas as pd
 from sklearn.metrics import jaccard_score
+# from sklearn.metrics import accuracy_score, jaccard_similarity_score
+# jaccard_score = jaccard_similarity_score
 
 def dot_product(a, b):
     a = np.squeeze(np.asarray(a))
