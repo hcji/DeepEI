@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras import optimizers
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, r2_score
 
 
@@ -21,13 +22,10 @@ class desc_DNN:
         self.Y = Y
         self.X_tr, self.X_ts, self.Y_tr, self.Y_ts = train_test_split(X, Y, test_size=0.1)
         
-        inp = Input(shape=(X.shape[1:3]))
-        n = X.shape[1]
-        
+        inp = Input(shape=(X.shape[1],))       
         hid = inp
         for i in range(5):
             hid = Dense(32, activation="relu")(hid)
-            n = int(n * 0.5)
         
         prd = Dense(1, activation="linear")(hid)
         opt = optimizers.Adam(lr=0.001)
@@ -35,8 +33,14 @@ class desc_DNN:
         model.compile(optimizer=opt, loss='mse', metrics=['mae'])
         self.model = model
     
-    def train(self, epochs=50):
-        self.model.fit(self.X_tr, self.Y_tr, epochs=epochs)
+    def train(self, epochs=20):
+        history = self.model.fit(self.X_tr, self.Y_tr, epochs=epochs, validation_split = 0.1)
+        plt.cla()
+        plt.plot(history.history['val_loss'], alpha= 0.8)
+        plt.plot(history.history['val_mean_absolute_error'], alpha= 0.8)
+        plt.legend(['loss', 'mae'], loc="lower left")
+        plt.xlabel('epoch')
+        return history
     
     def test(self):
         Y_test = self.Y_ts
@@ -75,6 +79,8 @@ if __name__ == '__main__':
     rindex = np.load('DeepEI/data/retention.npy')[keep,:]
     
     # descriptor
+    j = np.where(~np.isnan(np.sum(descriptors, 0)))[0]
+    descriptors = MinMaxScaler().fit_transform(descriptors[:,j])
     ## simipolar
     i = np.where(~ np.isnan(rindex[:,0]))[0]
     mod = desc_DNN(descriptors[i], rindex[i,0])
@@ -84,14 +90,14 @@ if __name__ == '__main__':
     
     ## nonpolar
     i = np.where(~ np.isnan(rindex[:,1]))[0]
-    mod = desc_DNN(descriptors[i], rindex[i,0])
+    mod = desc_DNN(descriptors[i], rindex[i,1])
     mod.train()
     mod.test()
     mod.clear()
 
     ## polar
     i = np.where(~ np.isnan(rindex[:,2]))[0]
-    mod = desc_DNN(descriptors[i], rindex[i,0])
+    mod = desc_DNN(descriptors[i], rindex[i,2])
     mod.train()
     mod.test()
     mod.clear()
@@ -106,14 +112,36 @@ if __name__ == '__main__':
     
     ## nonpolar
     i = np.where(~ np.isnan(rindex[:,1]))[0]
-    mod = desc_DNN(morgan[i], rindex[i,0])
+    mod = desc_DNN(morgan[i], rindex[i,1])
     mod.train()
     mod.test()
     mod.clear()
 
     ## polar
     i = np.where(~ np.isnan(rindex[:,2]))[0]
-    mod = desc_DNN(morgan[i], rindex[i,0])
+    mod = desc_DNN(morgan[i], rindex[i,2])
     mod.train()
     mod.test()
-    mod.clear()    
+    mod.clear()
+     
+    # morgan + descriptor
+    ## simipolar
+    i = np.where(~ np.isnan(rindex[:,0]))[0]
+    mod = desc_DNN(np.hstack([morgan[i],  descriptors[i]]), rindex[i,0])
+    mod.train()
+    mod.test()
+    mod.clear()
+    
+    ## nonpolar
+    i = np.where(~ np.isnan(rindex[:,1]))[0]
+    mod = desc_DNN(np.hstack([morgan[i],  descriptors[i]]), rindex[i,1])
+    mod.train()
+    mod.test()
+    mod.clear()
+
+    ## polar
+    i = np.where(~ np.isnan(rindex[:,2]))[0]
+    mod = desc_DNN(np.hstack([morgan[i],  descriptors[i]]), rindex[i,2])
+    mod.train()
+    mod.test()
+    mod.clear()  

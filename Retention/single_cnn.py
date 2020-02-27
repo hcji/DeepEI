@@ -13,6 +13,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input, Flatten, Conv1D, MaxPooling1D
 from tensorflow.keras import optimizers
 from sklearn.metrics import mean_absolute_error, r2_score
+from smiles_to_onehot.encoding import get_dict, one_hot_coding
 
 class single_CNN:
     def __init__(self, X, Y):
@@ -22,11 +23,9 @@ class single_CNN:
         
         inp = Input(shape=(X.shape[1:3]))
         hid = inp
-        n = X.shape[1]
         for j in range(5):
-            hid = Conv1D(n, kernel_size=3, activation='relu')(hid)
+            hid = Conv1D(32, kernel_size=3, activation='relu')(hid)
             hid = MaxPooling1D(pool_size=3)(hid)
-            n = int(n * 0.5)
         hid = Flatten()(hid)
         prd = Dense(1, activation="linear")(hid)
         opt = optimizers.Adam(lr=0.001)
@@ -35,7 +34,13 @@ class single_CNN:
         self.model = model
     
     def train(self, epochs=50):
-        self.model.fit(self.X_tr, self.Y_tr, epochs=epochs)
+        history = self.model.fit(self.X_tr, self.Y_tr, epochs=epochs, validation_split = 0.1)
+        plt.cla()
+        plt.plot(history.history['val_loss'], alpha= 0.8)
+        plt.plot(history.history['val_mean_absolute_error'], alpha= 0.8)
+        plt.legend(['loss', 'accuracy'], loc="lower left")
+        plt.xlabel('epoch')
+        return history
     
     def test(self):
         Y_test = self.Y_ts
@@ -68,6 +73,9 @@ if __name__ == '__main__':
     smiles = np.array(json.load(open('DeepEI/data/all_smiles.json')))[keep]
     rindex = np.load('DeepEI/data/retention.npy')[keep,:]
     
+    words = get_dict(smiles, save_path='DeepEI/data/words.json')
+    smiles = [one_hot_coding(smi, words, max_len=100) for smi in smiles]
+    
     # simipolar
     i = np.where(~ np.isnan(rindex[:,0]))[0]
     mod = single_CNN(smiles[i], rindex[i,0])
@@ -76,13 +84,13 @@ if __name__ == '__main__':
     
     # nonpolar
     i = np.where(~ np.isnan(rindex[:,1]))[0]
-    mod = single_CNN(smiles[i], rindex[i,0])
+    mod = single_CNN(smiles[i], rindex[i,1])
     mod.train()
     mod.test()
 
     # polar
     i = np.where(~ np.isnan(rindex[:,2]))[0]
-    mod = single_CNN(smiles[i], rindex[i,0])
+    mod = single_CNN(smiles[i], rindex[i,2])
     mod.train()
     mod.test()
     
