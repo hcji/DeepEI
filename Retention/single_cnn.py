@@ -74,7 +74,8 @@ if __name__ == '__main__':
     rindex = np.load('DeepEI/data/retention.npy')[keep,:]
     
     words = get_dict(smiles, save_path='DeepEI/data/words.json')
-    smiles = [one_hot_coding(smi, words, max_len=100) for smi in smiles]
+    smiles = [one_hot_coding(smi, words, max_len=100).todense() for smi in smiles]
+    smiles = np.array(smiles)
     
     # simipolar
     i = np.where(~ np.isnan(rindex[:,0]))[0]
