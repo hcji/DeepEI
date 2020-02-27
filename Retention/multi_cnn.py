@@ -26,21 +26,21 @@ class multi_CNN:
         n = X.shape[1]
 
         hidv1 = Conv1D(n, kernel_size=2, activation='relu')(inp)
-        hidv1 = MaxPooling1D(pool_size=2)(hidv1)
+        # hidv1 = MaxPooling1D(pool_size=2)(hidv1)
         hidv1 = Conv1D(n, kernel_size=2, activation='relu')(hidv1)
-        hidv1 = MaxPooling1D(pool_size=2)(hidv1)
+        # hidv1 = MaxPooling1D(pool_size=2)(hidv1)
         hidv1 = Flatten()(hidv1)
         
         hidv2 = Conv1D(n, kernel_size=3, activation='relu')(inp)
-        hidv2 = MaxPooling1D(pool_size=3)(hidv2)
+        # hidv2 = MaxPooling1D(pool_size=3)(hidv2)
         hidv2 = Conv1D(n, kernel_size=3, activation='relu')(hidv2)
-        hidv2 = MaxPooling1D(pool_size=3)(hidv2)
+        # hidv2 = MaxPooling1D(pool_size=3)(hidv2)
         hidv2 = Flatten()(hidv2)
         
         hidv3 = Conv1D(n, kernel_size=4, activation='relu')(inp)
-        hidv3 = MaxPooling1D(pool_size=4)(hidv3)
+        # hidv3 = MaxPooling1D(pool_size=4)(hidv3)
         hidv3 = Conv1D(n, kernel_size=4, activation='relu')(hidv3)
-        hidv3 = MaxPooling1D(pool_size=4)(hidv3)
+        # hidv3 = MaxPooling1D(pool_size=4)(hidv3)
         hidv3 = Flatten()(hidv3)
 
         hid = concat([hidv1, hidv2, hidv3], axis=-1)
@@ -53,7 +53,7 @@ class multi_CNN:
         model.compile(optimizer=opt, loss='mse', metrics=['mae'])
         self.model = model
     
-    def train(self, epochs=50):
+    def train(self, epochs=20):
         history = self.model.fit(self.X_tr, self.Y_tr, epochs=epochs, validation_split = 0.1)
         plt.cla()
         plt.plot(history.history['val_loss'], alpha= 0.8)

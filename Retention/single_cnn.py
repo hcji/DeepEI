@@ -33,7 +33,7 @@ class single_CNN:
         model.compile(optimizer=opt, loss='mse', metrics=['mae'])
         self.model = model
     
-    def train(self, epochs=50):
+    def train(self, epochs=20):
         history = self.model.fit(self.X_tr, self.Y_tr, epochs=epochs, validation_split = 0.1)
         plt.cla()
         plt.plot(history.history['val_loss'], alpha= 0.8)
