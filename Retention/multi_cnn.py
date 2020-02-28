@@ -11,7 +11,7 @@ import tensorflow.keras.backend as K
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Input, Flatten, Conv1D, MaxPooling1D, concat
+from tensorflow.keras.layers import Dense, Input, Flatten, Conv1D, MaxPooling1D, concatenate
 from tensorflow.keras import optimizers
 from sklearn.metrics import mean_absolute_error, r2_score
 from smiles_to_onehot.encoding import get_dict, one_hot_coding
@@ -43,7 +43,7 @@ class multi_CNN:
         # hidv3 = MaxPooling1D(pool_size=4)(hidv3)
         hidv3 = Flatten()(hidv3)
 
-        hid = concat([hidv1, hidv2, hidv3], axis=-1)
+        hid = concatenate([hidv1, hidv2, hidv3], axis=-1)
         hid = Dense(32, activation="relu")(hid)
         hid = Dense(32, activation="relu")(hid)
         

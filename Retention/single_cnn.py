@@ -25,7 +25,7 @@ class single_CNN:
         hid = inp
         for j in range(5):
             hid = Conv1D(32, kernel_size=3, activation='relu')(hid)
-            hid = MaxPooling1D(pool_size=3)(hid)
+            # hid = MaxPooling1D(pool_size=3)(hid)
         hid = Flatten()(hid)
         prd = Dense(1, activation="linear")(hid)
         opt = optimizers.Adam(lr=0.001)
