@@ -12,7 +12,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from sklearn.metrics import accuracy_score, jaccard_score
+from sklearn.metrics import jaccard_similarity_score
+jaccard_score = jaccard_similarity_score
 from scipy.sparse import load_npz, csr_matrix
 from DeepEI.predict import predict_RI, predict_fingerprint
 
@@ -75,5 +76,5 @@ if __name__ == '__main__':
             true_fp_score = fp_scores[w_true[0]]
             rank = len(np.where(fp_scores > true_fp_score)[0]) + 1 
         output.loc[len(output)] = [smi, mass, true_fp_score, rank, len(candidate)]
-    output.to_csv('Discussion/NIST_test/results/DeepEI_nist.csv')
+        output.to_csv('Discussion/NIST_test/results/DeepEI_nist.csv')
         

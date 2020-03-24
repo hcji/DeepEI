@@ -13,16 +13,20 @@ from tensorflow.keras.models import model_from_json, load_model
 from smiles_to_onehot.encoding import one_hot_coding
 
 def predict_RI(smiles, mode='SimiStdNP'):
-    words = open('Model/RI/SimiStdNP_CNN_multi_dict.json', 'r').read()
+    words = open('DeepEI/data/words.json', 'r').read()
     words = json.loads(words)
     if mode == 'SimiStdNP':
-        model = load_model('Model/RI/SimiStdNP_CNN_multi_model.h5')
+        model = load_model('Retention/models/SimiStdNP_CNN_multi_model.h5')
+    elif mode == 'StdNP':
+        model = load_model('Retention/models/StdNP_CNN_multi_model.h5')
+    elif mode == 'StdPolar':
+        model = load_model('Retention/models/StdPolar_CNN_multi_model.h5')
     else:
-        model = load_model('Model/RI/StdPolar_CNN_multi_model.h5')
+        return None
     
     X = []
     for i, smi in enumerate(smiles):
-        xi = one_hot_coding(smi, words, max_len=600)
+        xi = one_hot_coding(smi, words, max_len=100)
         X.append(xi.todense())
     X = np.array(X)
     pred = model.predict(X)

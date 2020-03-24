@@ -102,16 +102,19 @@ if __name__ == '__main__':
     mod = multi_CNN(smiles[i], rindex[i,0])
     mod.train()
     mod.test()
+    mod.save('Retention/models/SimiStdNP_CNN_multi_model.h5')
     
     # nonpolar
     i = np.where(~ np.isnan(rindex[:,1]))[0]
     mod = multi_CNN(smiles[i], rindex[i,1])
     mod.train()
     mod.test()
+    mod.save('Retention/models/StdNP_CNN_multi_model.h5')
 
     # polar
     i = np.where(~ np.isnan(rindex[:,2]))[0]
     mod = multi_CNN(smiles[i], rindex[i,2])
     mod.train()
     mod.test()
+    mod.save('Retention/models/StdPolar_CNN_multi_model.h5')
     

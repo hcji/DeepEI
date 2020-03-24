@@ -7,9 +7,9 @@ Created on Wed Nov 27 10:20:45 2019
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import jaccard_score
-# from sklearn.metrics import accuracy_score, jaccard_similarity_score
-# jaccard_score = jaccard_similarity_score
+# from sklearn.metrics import jaccard_score
+from sklearn.metrics import accuracy_score, jaccard_similarity_score
+jaccard_score = jaccard_similarity_score
 
 def dot_product(a, b):
     a = np.squeeze(np.asarray(a))
@@ -94,7 +94,7 @@ if __name__ == '__main__':
         true_fp = true_fp[fpkeep]
         true_score_fp = jaccard_score(pred_fp, true_fp)  # fp score of the true compound
         true_score_sp = weitht_dot_product(speci, pred_sp) # sp score of the true compound
-        true_score = 0.5*true_score_fp + 0.5*true_score_sp
+        true_score = 0.7*true_score_fp + 0.3*true_score_sp
         
         candidate = np.where(np.abs(masses - mass) < 5)[0] # candidate of nist
         cand_smi = smiles[candidate]
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         
         fp_scores = get_fp_score(pred_fp, cdk_fp[candidate, :]) # scores of all candidtates
         sp_scores = get_score(speci, spec[candidate,:], m='wdp')
-        cand_scores = 0.5*fp_scores + 0.5*sp_scores
+        cand_scores = 0.7*fp_scores + 0.3*sp_scores
         
         rank = len(np.where(cand_scores > true_score)[0]) + 1
         
