@@ -65,7 +65,7 @@ if __name__ == '__main__':
     pred_fp = predict_fingerprint(test_spec, fpkeep)
     
     # rank
-    output = pd.DataFrame(columns=['smiles', 'mass', 'true RI', 'predict RI', 'mass filter', 'RI filter', 'mass & RI filter'])
+    output = pd.DataFrame(columns=['smiles', 'mass', 'true RI', 'predict RI', 'mass filter', 'RI filter', 'Without filter'])
     for i in tqdm(range(len(test))):
         smi = test_smiles[i]
         mass = test_mass[i]
@@ -86,24 +86,24 @@ if __name__ == '__main__':
         # ri filter
         candidate = np.where(np.abs(RIs - ri) < 200)[0]
         w_true = np.where(candidate==trueindex)[0]
+        pri = RIs[candidate[w_true]][0]
         if len(w_true)==0:
             rank_ri = 99999
         else:
-            pri = RIs[candidate[w_true]][0]
             fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate, :])
             true_fp_score = fp_scores[w_true[0]]
             rank_ri = len(np.where(fp_scores > true_fp_score)[0]) + 1
         
-        # mass & ri filter
-        candidate = np.where(np.logical_and(np.abs(RIs - ri) < 200, np.abs(all_masses - mass) < 5))[0]
+        # without filter
+        candidate = np.arange(0, len(RIs))
         w_true = np.where(candidate==trueindex)[0]
         if len(w_true)==0:
-            rank_combine = 99999
+            rank_no = 99999
         else:
             fp_scores = get_fp_score(pred_fpi, cdk_fp[candidate, :])
             true_fp_score = fp_scores[w_true[0]]
-            rank_combine = len(np.where(fp_scores > true_fp_score)[0]) + 1        
+            rank_no = len(np.where(fp_scores > true_fp_score)[0]) + 1        
             
-        output.loc[len(output)] = [smi, mass, ri, pri, rank_mass, rank_ri, rank_combine]
-        output.to_csv('Discussion/NIST_test/results/DeepEI_nist_RI.csv')
+        output.loc[len(output)] = [smi, mass, ri, pri, rank_mass, rank_ri, rank_no]
+        output.to_csv('Discussion/NIST_test/results/DeepEI_nist_RI1.csv')
     
