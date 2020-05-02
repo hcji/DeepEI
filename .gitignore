@@ -1,6 +1,9 @@
 /NIST2017/
+/Temp/
+/Element/
 /.spyproject/
 *.pyc
 *.h5
 *.npy
 *.npz
+*.csv
