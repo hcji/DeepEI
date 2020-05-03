@@ -6,6 +6,7 @@ Created on Sun Apr 28 13:43:18 2019
 """
 
 import numpy as np
+import pandas as pd
 from rdkit import Chem
 from io import StringIO
 from tqdm import tqdm

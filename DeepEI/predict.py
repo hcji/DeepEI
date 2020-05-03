@@ -51,19 +51,3 @@ def predict_fingerprint(spec, fpkeep):
         pred = np.round(model.predict(spec))[:,0]
         pred_fp[:,i] = pred  
     return pred_fp
-
-
-def predict_elements(spec):
-    files = os.listdir('Element/models')
-    files = [str(f) for f in files if '.h5' in f]
-    modjs = open('Element/models/model.json', 'r').read()
-    model = model_from_json(modjs)
-    pred_elem = np.zeros((spec.shape[0], len(files)))
-    for i, f in enumerate(tqdm(files)):
-        model.load_weights('Element/models/' + f)
-        scl = joblib.load('Element/models/' + f.replace('h5', 'scl'))
-        pred = model.predict(spec)
-        pred = scl.inverse_transform(pred)
-        pred_elem[:,i] = np.squeeze(np.asarray(pred))
-    return pred_elem   
-    
