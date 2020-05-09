@@ -8,6 +8,7 @@ Created on Wed Nov  6 14:25:33 2019
 import json
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from scipy.sparse import load_npz, csr_matrix
 from libmetgem import msp
 from tqdm import tqdm
@@ -40,8 +41,14 @@ pred_fps = predict_fingerprint(msbk_spec, fpkeep)
 db_smiles = np.array(list(neims_msbk_smiles) + list(nist_smiles))
 db_masses = np.append(neims_msbk_masses, nist_masses)
 db_fingerprints = np.append(neims_msbk_cdkfps, nist_fingerprint, axis=0)[:, fpkeep]
-
-
+'''
+nist_onbit = np.squeeze(np.asarray(np.sum(nist_fingerprint[:, fpkeep], axis=1)))
+msbk_onbit = np.squeeze(np.asarray(np.sum(neims_msbk_cdkfps[:, fpkeep], axis=1)))
+plt.figure(figsize=(8, 6))
+plt.violinplot( [nist_onbit, msbk_onbit] , showmeans=False, showmedians=True)
+plt.xticks([1, 2], ['NIST', 'MassBank'])
+plt.ylabel('Number of On-bit Fingerprints')
+'''
 if __name__ == '__main__':
     
     output = pd.DataFrame(columns=['smiles', 'mass', 'fp_score', 'rank', 'candidates', 'inNIST'])
@@ -62,5 +69,5 @@ if __name__ == '__main__':
         rank = len(np.where(scores > true_score)[0]) + 1
         
         output.loc[len(output)] = [smi, mass, true_score, rank, len(candidate), incl]
-        output.to_csv('Discussion/results/DeepEI_massbank.csv')
+        output.to_csv('Discussion/results/DeepEI_massbank_B.csv')
         
