@@ -16,8 +16,8 @@ class XGBoost:
         self.Y = Y
         self.X_tr, self.X_ts, self.Y_tr, self.Y_ts = train_test_split(X, Y, test_size=0.1)
     
-    def train(self):
-        self.model = XGBClassifier().fit(self.X_tr, self.Y_tr)
+    def train(self, max_depth=3, learning_rate=0.1, n_estimators=100):
+        self.model = XGBClassifier(max_depth=max_depth, learning_rate=learning_rate, n_estimators=n_estimators).fit(self.X_tr, self.Y_tr)
     
     def test(self):
         Y_pred = np.round(self.model.predict(self.X_ts))
