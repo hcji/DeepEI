@@ -16,6 +16,10 @@ The main functions of predication are included in the *DeepEI* folder. *predict_
 
 ### Comparison
 
-the *Discussion* folder contains the scripts for evaluating the identification performance, and comparing with [NEIMS](https://github.com/brain-research/deep-molecular-massspec) package. The corresponding results are also included. We compared DeepEI, NEIMS and their combination.
+The *Discussion* folder contains the scripts for evaluating the identification performance, and comparing with [NEIMS](https://github.com/brain-research/deep-molecular-massspec) package. The corresponding results are also included. We compared DeepEI, NEIMS and their combination.
+
+### Usage
+
+The example codes for usage is included in the *Usage.ipynb*
 
 **Contact:** ji.hongchao@foxmail.com
