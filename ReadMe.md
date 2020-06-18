@@ -1,6 +1,6 @@
 ## DeepEI
 
-This is the repository of codes for the paper entitled "[Predicting molecular fingerprint from electron−ionization mass spectrum with deep neural networks](https://www.biorxiv.org/content/10.1101/2020.03.30.017137v1)" (submit). This repository only contains the source codes without any data or pretrained models, due to the models were trained by NIST dataset.
+This is the repository of codes for the paper entitled "[Predicting Molecular Fingerprint from Electron-Ionization Mass Spectrum with Deep Neural Networks](https://pubs.acs.org/doi/10.1021/acs.analchem.0c01450)". This repository only contains the source codes without any data or pretrained models, due to the models were trained by NIST dataset.
 
 ### Data preprocess
 
