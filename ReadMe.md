@@ -2,6 +2,10 @@
 
 This is the repository of codes for the paper entitled "[Predicting Molecular Fingerprint from Electron-Ionization Mass Spectrum with Deep Neural Networks](https://pubs.acs.org/doi/10.1021/acs.analchem.0c01450)". This repository only contains the source codes without any data or pretrained models, due to the models were trained by NIST dataset.
 
+<div align="center">
+<img src="https://github.com/hcji/DeepEI/blob/master/figure.png" width=600 height=450 />
+</div>
+
 ### Data preprocess
 
 Data preprocess scripts are used for extracting compound information of NIST into numpy object. They are included in the *scripts/read.py* , including gathering the SMILES, exact masses, retention indices, Morgan fingerprints, molecular descriptors and mass spectra.
