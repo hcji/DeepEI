@@ -6,6 +6,15 @@ This is the repository of codes for the paper entitled "[Predicting Molecular Fi
 <img src="https://github.com/hcji/DeepEI/blob/master/figure.png">
 </div>
 
+### Depends:
+[python3](https://www.python.org/)     
+[rdkit](https://rdkit.org/)     
+[tensorflow](https://www.tensorflow.org)     
+
+optinal:    
+[pycdk](https://github.com/hcji/pycdk)      
+[smiles_to_onehot](https://gitee.com/hcji/smiles_to_onehot)    
+
 ### Data preprocess
 
 Data preprocess scripts are used for extracting compound information of NIST into numpy object. They are included in the *scripts/read.py* , including gathering the SMILES, exact masses, retention indices, Morgan fingerprints, molecular descriptors and mass spectra.

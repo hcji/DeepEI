@@ -13,10 +13,14 @@ from tqdm import tqdm
 import rpy2.robjects as robjects
 import rpy2.robjects.numpy2ri as numpy2ri
 from rdkit.Chem.rdMolDescriptors import CalcExactMolWt
-from sklearn.metrics import jaccard_similarity_score
+try:
+    from sklearn.metrics import jaccard_similarity_score
+    jaccard_score = jaccard_similarity_score
+except:
+    from sklearn.metrics import jaccard_score
 # jaccard_score funcion return different result. not know why.
 # scikit-learn 0.21.2
-jaccard_score = jaccard_similarity_score
+
 numpy2ri.activate()
 robjects.r('''source('DeepEI/rcdk.R')''')
 get_fingerprint = robjects.globalenv['get_fingerprint']
