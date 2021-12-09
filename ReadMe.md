@@ -1,4 +1,4 @@
-<div align="center">
+<div align="left">
 <img src="https://github.com/hcji/DeepEI/blob/master/logo.png">
 </div>
 
