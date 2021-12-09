@@ -1,5 +1,5 @@
 <div align="left">
-<img src="https://github.com/hcji/DeepEI/blob/master/logo.png">
+<img src="https://github.com/hcji/DeepEI/blob/master/logo.png" width="70%">
 </div>
 
 This is the repository of codes for the paper entitled "[Predicting Molecular Fingerprint from Electron-Ionization Mass Spectrum with Deep Neural Networks](https://pubs.acs.org/doi/10.1021/acs.analchem.0c01450)". This repository only contains the source codes without any data or pretrained models, due to the models were trained by NIST dataset.
