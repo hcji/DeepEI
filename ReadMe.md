@@ -1,6 +1,6 @@
 ## DeepEI
 
-This is the repository of codes for the paper entitled "Predicting a Molecular Fingerprint from an Electron Ionization Mass Spectrum with Deep Neural Networks" (DOI: 10.1021/acs.analchem.0c01450).   
+This is the repository of codes for the paper entitled "Predicting a Molecular Fingerprint from an Electron Ionization Mass Spectrum with Deep Neural Networks" (DOI: [10.1021/acs.analchem.0c01450](https://pubs.acs.org/doi/10.1021/acs.analchem.0c01450)).   
 
 We exported each mass spectrum file (msp file) and molecular file (sdf) from NIST 2017 manually and save to db file (see *scripts/NIST2DB.py* for codes). When training,  we retrieved information from the db file. However, this repository only contains the source codes **without** any data or pretrained models, due to the models were trained by NIST dataset.    
 
