@@ -14,6 +14,7 @@ from tqdm import tqdm
 from rdkit import Chem
 from rdkit.Chem import inchi
 
+import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input
@@ -103,6 +104,10 @@ fingerprint_mat = np.array(fingerprint_mat)
 np.save('spectra_mat.npy', spectra_mat)
 np.save('fingerprint_mat.npy', fingerprint_mat)
 
+
+spectra_mat = np.load('spectra_mat.npy')
+fingerprint_mat = np.load('fingerprint_mat.npy')
+
 class MLP:
     def __init__(self, X, Y):
         self.X = X
@@ -116,13 +121,19 @@ class MLP:
             hid = Dense(n, activation="relu")(hid)
             n = int(n * 0.5)
         prd = Dense(2, activation="softmax")(hid)
-        opt = optimizers.Adam(lr=0.001)
+        opt = optimizers.Adam()
         model = Model(inp, prd)
         model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['acc'])
         self.model = model
         
+    def reset_data(self, X, Y):
+        self.X = X
+        self.Y = Y
+        self.X_tr, self.X_ts, self.Y_tr, self.Y_ts = train_test_split(X, Y, test_size=0.1)        
+        
     def train(self, epochs=8):
-        self.model.fit(self.X_tr, self.Y_tr, epochs=epochs)
+        with tf.device('/GPU:0'):
+            self.model.fit(self.X_tr, self.Y_tr, epochs=epochs, batch_size=32)
     
     def test(self):
         Y_pred = np.round(self.model.predict(self.X_ts))
@@ -143,24 +154,22 @@ class MLP:
 # build model
 for i in tqdm(range(fingerprint_mat.shape[1])):
     y = fingerprint_mat[:,i]
+    if i == 0:
+        Y = np.vstack((y, (1-y))).transpose()
+        mlp = MLP(spectra_mat, Y)
+    
     # check: 0.1 < bias < 0.9
     fr = np.sum(y) / len(y)
     if (fr < 0.1) or (fr > 0.9):
         continue
     Y = np.vstack((y, (1-y))).transpose()
-    
     mlp_result = open('Fingerprint/results/mlp_result_new.txt', 'a+')
     
     # mlp model
-    mlp = MLP(spectra_mat, Y)
+    mlp.reset_data(spectra_mat, Y)
     mlp.train()
     mlp_res = mlp.test()
     mlp_result.write("\t".join([str(i)] + [str(j) for j in mlp_res]))
     mlp_result.write("\n")
     mlp.save('Fingerprint/mlp_models/{}.h5'.format(i))
-
-
-
-
-
 
